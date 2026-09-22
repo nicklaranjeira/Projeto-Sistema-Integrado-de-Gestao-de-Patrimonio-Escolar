@@ -1,31 +1,28 @@
-// Professores
+// Coordenadores
 
-class Professores {
-  final String nome;
+class Coordenadores {
   final String email;
   final String password;
-  final String matricula;
+  final String nome;
   final String departamento;
   final String telefone;
   final String cpf;
 
-  Professores({
-    required this.nome,
+  Coordenadores({
     required this.email,
     required this.password,
-    required this.matricula,
+    required this.nome,
     required this.departamento,
     required this.telefone,
     required this.cpf,
   });
 
-  /// Converte o JSON recebido da API em uma instância de Professores
-  factory Professores.fromJson(Map<String, dynamic> json) {
-    return Professores(
-      nome: json['nome'],
+  /// Converte o JSON recebido da API em uma instância de Coordenadores
+  factory Coordenadores.fromJson(Map<String, dynamic> json) {
+    return Coordenadores(
       email: json['email'],
       password: json['password'],
-      matricula: json['matricula'],
+      nome: json['nome'],
       departamento: json['departamento'],
       telefone: json['telefone'],
       cpf: json['cpf'],
@@ -35,13 +32,13 @@ class Professores {
   /// Converte os dados para o formato esperado pelo backend
   Map<String, dynamic> toJson() {
     return {
-      "nome": nome,
       "email": email,
       "password": password,
-      "matricula": matricula,
+      "nome": nome,
       "departamento": departamento,
       "telefone": telefone,
       "cpf": cpf,
     };
   }
 }
+
