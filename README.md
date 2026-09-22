@@ -1,1 +1,1 @@
-# Sistema-Integrado-de-Gest-o-de-Patrim-nio-Escolar
+# Sistema-Integrado-de-Gestao-de-Patrimonio-Escolar
