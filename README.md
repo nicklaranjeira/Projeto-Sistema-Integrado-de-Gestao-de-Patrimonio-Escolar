@@ -108,42 +108,52 @@ O aplicativo adota a arquitetura **MVC (Model - View - Controller)** com gerenci
 ## 6. Estrutura do Código-Fonte
 
 ```
-lib/
-├── app/
-│   ├── controladores/             # Lógica de controle e gerenciamento de estado
+gestao_de_patrimonios/
+├── lib/
+│   ├── controllers/               # Lógica de controle e gerenciamento de estado
 │   │   ├── autenticacao_controlador.dart
 │   │   ├── painel_controlador.dart
 │   │   ├── patrimonio_controlador.dart
 │   │   ├── professor_controlador.dart
 │   │   ├── meus_patrimonios_controlador.dart
 │   │   └── perfil_controlador.dart
-│   ├── dados/
-│   │   ├── modelos/               # Modelos de dados com parsing JSON
-│   │   │   ├── usuario_modelo.dart
-│   │   │   ├── patrimonio_modelo.dart
-│   │   │   ├── professor_modelo.dart
-│   │   │   ├── historico_movimentacao_modelo.dart
-│   │   │   └── estatisticas_painel_modelo.dart
-│   │   └── servicos/              # Clientes de rede HTTP e persistência
-│   │       ├── api_servico.dart
-│   │       ├── armazenamento_servico.dart
-│   │       ├── autenticacao_servico.dart
-│   │       ├── painel_servico.dart
-│   │       ├── patrimonio_servico.dart
-│   │       ├── professor_servico.dart
-│   │       └── perfil_servico.dart
-│   ├── rotas/
-│   │   ├── paginas_app.dart       # Definição de GetPages e transições
-│   │   └── rotas_app.dart         # Constantes das rotas nomeadas
-│   └── vinculacoes/               # Injeção de dependências do GetX
-│       ├── inicial_vinculacao.dart
-│       ├── autenticacao_vinculacao.dart
-│       ├── painel_vinculacao.dart
-│       ├── patrimonio_vinculacao.dart
-│       ├── professor_vinculacao.dart
-│       ├── meus_patrimonios_vinculacao.dart
-│       └── perfil_vinculacao.dart
-├── main.dart                      # Inicialização do GetMaterialApp
+│   ├── models/                    # Modelos de dados com parsing JSON
+│   │   ├── usuario_modelo.dart
+│   │   ├── patrimonio_modelo.dart
+│   │   ├── professor_modelo.dart
+│   │   ├── historico_movimentacao_modelo.dart
+│   │   └── estatisticas_painel_modelo.dart
+│   ├── services/                  # Clientes de rede HTTP e persistência
+│   │   ├── api_servico.dart
+│   │   ├── armazenamento_servico.dart
+│   │   ├── autenticacao_servico.dart
+│   │   ├── painel_servico.dart
+│   │   ├── patrimonio_servico.dart
+│   │   ├── professor_servico.dart
+│   │   └── perfil_servico.dart
+│   ├── routes/                    # Definição de GetPages e transições
+│   │   ├── paginas_app.dart
+│   │   └── rotas_app.dart
+│   ├── bindings/                  # Injeção de dependências do GetX
+│   │   ├── inicial_vinculacao.dart
+│   │   ├── autenticacao_vinculacao.dart
+│   │   ├── painel_vinculacao.dart
+│   │   ├── patrimonio_vinculacao.dart
+│   │   ├── professor_vinculacao.dart
+│   │   ├── meus_patrimonios_vinculacao.dart
+│   │   └── perfil_vinculacao.dart
+│   └── main.dart                  # Inicialização do GetMaterialApp
+├── test/                          # Testes automatizados de unidade
+│   ├── rf01_login_teste.dart
+│   ├── rf02_cadastro_coordenador_teste.dart
+│   ├── rf03_recuperacao_senha_teste.dart
+│   ├── rf04_logout_teste.dart
+│   ├── rf05_dashboard_indicadores_teste.dart
+│   ├── rf06_gestao_professores_teste.dart
+│   ├── rf07_gestao_patrimonios_teste.dart
+│   ├── rf08_meus_patrimonios_teste.dart
+│   ├── rf09_gerenciamento_perfil_teste.dart
+│   └── widget_test.dart
 └── pubspec.yaml                   # Dependências do projeto Flutter
 ```
 
@@ -166,9 +176,15 @@ lib/
 
 ### 3. Executar o Aplicativo Flutter
 ```bash
+# Navegar até a pasta do projeto Flutter
+cd gestao_de_patrimonios
+
 # Obter dependências do projeto
 flutter pub get
 
 # Executar a aplicação no dispositivo/emulador conectado
 flutter run
+
+# Executar todos os testes automatizados
+flutter test
 ```

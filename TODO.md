@@ -23,14 +23,14 @@ Este documento detalha o status de implementação do **Sistema Integrado de Ges
 ## 2. O Que Já Foi Concluído (Entregue)
 
 ### Camada de Arquitetura e Controle (Backend Integration)
-- [x] **Configuração de Dependências (`pubspec.yaml`):** Inclusão do `get` (GetX), `get_storage` (persistência de sessão) e `http`.
-- [x] **Modelos de Dados (`lib/app/dados/modelos/`):**
+- [x] **Configuração de Dependências (`gestao_de_patrimonios/pubspec.yaml`):** Inclusão do `get` (GetX), `get_storage` (persistência de sessão) e `http`.
+- [x] **Modelos de Dados (`gestao_de_patrimonios/lib/models/`):**
   - [x] `usuario_modelo.dart` (dados do usuário, token JWT e verificação de perfil `eAdmin` / `eProfessor`).
   - [x] `patrimonio_modelo.dart` (dados completos do bem material, status e vinculação a docentes).
   - [x] `professor_modelo.dart` (dados do docente e contagem de bens).
   - [x] `historico_movimentacao_modelo.dart` (linha do tempo e rastreabilidade de movimentações).
   - [x] `estatisticas_painel_modelo.dart` (indicadores consolidados para o dashboard).
-- [x] **Camada de Serviços e Rede (`lib/app/dados/servicos/`):**
+- [x] **Camada de Serviços e Rede (`gestao_de_patrimonios/lib/services/`):**
   - [x] `armazenamento_servico.dart` (gravação e recuperação segura de JWT, Refresh Token e dados do usuário logado via `GetStorage`).
   - [x] `api_servico.dart` (cliente HTTP centralizado com `GetConnect`, interceptor do cabeçalho `Authorization: Bearer <token>` e mapeamento de mensagens amigáveis de erro HTTP 400, 401, 403, 404, 500).
   - [x] `autenticacao_servico.dart` (login, cadastro, refresh, logout e recuperação de senha).
@@ -38,17 +38,17 @@ Este documento detalha o status de implementação do **Sistema Integrado de Ges
   - [x] `professor_servico.dart` (listagem, cadastro centralizado com senha provisória e detalhes).
   - [x] `perfil_servico.dart` (consulta e atualização cadastral e de senha).
   - [x] `painel_servico.dart` (indicadores e health check).
-- [x] **Controladores do Sistema (`lib/app/controladores/`):**
+- [x] **Controladores do Sistema (`gestao_de_patrimonios/lib/controllers/`):**
   - [x] `autenticacao_controlador.dart` (fluxos completos de autenticação, validações, redirecionamento condicional por perfil e recuperação em 3 passos).
   - [x] `painel_controlador.dart` (obtenção reativa de métricas e atalhos de navegação).
   - [x] `patrimonio_controlador.dart` (gestão completa de inventário, busca textual em tempo real, filtros de status/categoria, atribuição, devolução e histórico).
   - [x] `professor_controlador.dart` (cadastro de docente com senha provisória e consulta de bens sob tutela).
   - [x] `meus_patrimonios_controlador.dart` (visão somente leitura do professor, sem ações de mutação para respeito estrito à regra `[RN03]`).
   - [x] `perfil_controlador.dart` (atualização de telefone, departamento e troca de senha).
-- [x] **Injeção de Dependências (`lib/app/vinculacoes/`):** Criação das vinculações (`Bindings`) para carregamento sob demanda dos controladores e inicialização singleton de serviços globais no `inicial_vinculacao.dart`.
-- [x] **Roteamento Centralizado (`lib/app/rotas/`):** Definição das rotas nomeadas (`rotas_app.dart`) e mapeamento de páginas com transições fluidas (`paginas_app.dart`).
-- [x] **Inicialização da Aplicação (`lib/main.dart`):** Configuração do `GetMaterialApp` e injeção do armazenamento persistente na inicialização.
-- [x] **Testes Unitários Automatizados (`test/`):**
+- [x] **Injeção de Dependências (`gestao_de_patrimonios/lib/bindings/`):** Criação das vinculações (`Bindings`) para carregamento sob demanda dos controladores e inicialização singleton de serviços globais no `inicial_vinculacao.dart`.
+- [x] **Roteamento Centralizado (`gestao_de_patrimonios/lib/routes/`):** Definição das rotas nomeadas (`rotas_app.dart`) e mapeamento de páginas com transições fluidas (`paginas_app.dart`).
+- [x] **Inicialização da Aplicação (`gestao_de_patrimonios/lib/main.dart`):** Configuração do `GetMaterialApp` e injeção do armazenamento persistente na inicialização.
+- [x] **Testes Unitários Automatizados (`gestao_de_patrimonios/test/`):**
   - [x] `rf01_login_teste.dart` (validação de credenciais, perfil admin/docente, imutabilidade e parsing).
   - [x] `rf02_cadastro_coordenador_teste.dart` (validação de campos de coordenador e confirmação de senha).
   - [x] `rf03_recuperacao_senha_teste.dart` (fluxo em 3 etapas com código de 6 dígitos e nova senha).
