@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../model/professores.dart';
 
-/// Service responsável pela comunicação com os endpoints de Professores.
 class ProfessoresService extends GetConnect {
   String? _customBaseUrl;
 
@@ -32,7 +31,6 @@ class ProfessoresService extends GetConnect {
     httpClient.defaultContentType = 'application/json';
   }
 
-  /// Define o token JWT para requisições autenticadas
   void definirToken(String token) {
     httpClient.addRequestModifier<dynamic>((request) {
       request.headers['Authorization'] = 'Bearer $token';
@@ -65,7 +63,6 @@ class ProfessoresService extends GetConnect {
     }
 
     if (res.statusCode == 404) {
-      // Fallback para alternativas: /api/professores ou /api/v1/professores
       final rotaAlt = endpoint.contains('/admin/')
           ? endpoint.replaceFirst('/admin/', '/')
           : endpoint.replaceFirst('/api/', '/api/v1/');
@@ -92,7 +89,6 @@ class ProfessoresService extends GetConnect {
     return res;
   }
 
-  /// GET /api/admin/professores - Lista todos os professores
   Future<Response<List<Professores>>> listarProfessores() async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
@@ -101,7 +97,6 @@ class ProfessoresService extends GetConnect {
     return _parseListResponse(response);
   }
 
-  /// GET /api/admin/professores/{matricula} - Detalhes do professor por matrícula ou ID
   Future<Response<Professores>> buscarPorMatricula(String matricula) async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
@@ -110,7 +105,6 @@ class ProfessoresService extends GetConnect {
     return _parseSingleResponse(response);
   }
 
-  /// POST /api/admin/professores - Cadastra um novo professor
   Future<Response<Professores>> cadastrarProfessor(Professores professor) async {
     final response = await _requisicaoComFallback(
       metodo: 'POST',
@@ -120,7 +114,6 @@ class ProfessoresService extends GetConnect {
     return _parseSingleResponse(response);
   }
 
-  /// PUT /api/admin/professores/{matricula} - Atualiza dados do professor
   Future<Response<Professores>> atualizarProfessor(
     String matricula,
     Professores professor,
@@ -133,7 +126,6 @@ class ProfessoresService extends GetConnect {
     return _parseSingleResponse(response);
   }
 
-  /// DELETE /api/admin/professores/{matricula} - Exclui um professor
   Future<Response> excluirProfessor(String matricula) async {
     return await _requisicaoComFallback(
       metodo: 'DELETE',
@@ -223,4 +215,3 @@ class ProfessoresService extends GetConnect {
     );
   }
 }
-

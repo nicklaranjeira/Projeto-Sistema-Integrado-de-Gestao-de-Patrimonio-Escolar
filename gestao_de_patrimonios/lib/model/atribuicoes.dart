@@ -4,7 +4,6 @@ class AtribuicaoPatrimonio {
 
   AtribuicaoPatrimonio({required this.professorId, required this.observacoes});
 
-  /// Converte o JSON recebido da API em uma instância de AtribuicaoPatrimonio
   factory AtribuicaoPatrimonio.fromJson(Map<String, dynamic> json) {
     return AtribuicaoPatrimonio(
       professorId: json['professorId'],
@@ -12,7 +11,6 @@ class AtribuicaoPatrimonio {
     );
   }
 
-  /// Converte os dados para o formato esperado pelo backend
   Map<String, dynamic> toJson() {
     return {"professorId": professorId, "observacoes": observacoes};
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'services/armazenamento_servico.dart';
+import 'service/armazenamento_servico.dart';
 import 'routes/paginas_app.dart';
 import 'routes/rotas_app.dart';
 import 'bindings/inicial_vinculacao.dart';

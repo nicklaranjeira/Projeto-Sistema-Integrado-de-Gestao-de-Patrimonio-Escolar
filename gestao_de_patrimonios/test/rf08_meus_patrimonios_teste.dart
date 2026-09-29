@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:gestao_de_patrimonios/models/patrimonio_modelo.dart';
+import 'package:gestao_de_patrimonios/model/patrimonio_modelo.dart';
 
 void main() {
   setUp(() {

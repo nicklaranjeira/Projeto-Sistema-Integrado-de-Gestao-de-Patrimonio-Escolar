@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../model/autentificacao.dart';
 import '../model/redefinicao_de_senha.dart';
 
-/// Service responsável pela comunicação com os endpoints de autenticação e recuperação de senha.
 class AutenticacaoService extends GetConnect {
   String? _customBaseUrl;
 
@@ -35,7 +34,6 @@ class AutenticacaoService extends GetConnect {
     httpClient.defaultContentType = 'application/json';
   }
 
-  /// Define o token JWT para requisições autenticadas
   void definirToken(String token) {
     httpClient.addRequestModifier<dynamic>((request) {
       request.headers['Authorization'] = 'Bearer $token';
@@ -56,37 +54,30 @@ class AutenticacaoService extends GetConnect {
     return res;
   }
 
-  /// POST /api/auth/register - Auto-cadastro de Administrador (Coordenador)
   Future<Response> cadastrarAdmin(Map<String, dynamic> dados) async {
     return await _postComFallback('/api/auth/register', dados);
   }
 
-  /// POST /api/auth/login - Realiza login
   Future<Response> login(Login dados) async {
     return await _postComFallback('/api/auth/login', dados.toJson());
   }
 
-  /// POST /api/auth/refresh - Renova o token de acesso
   Future<Response> renovarToken(RenovarToken dados) async {
     return await _postComFallback('/api/auth/refresh', dados.toJson());
   }
 
-  /// POST /api/auth/logout - Encerra a sessão ativa
   Future<Response> encerrarSessao(EncerrarSessao dados) async {
     return await _postComFallback('/api/auth/logout', dados.toJson());
   }
 
-  /// POST /api/auth/forgot-password - Solicita envio de código de recuperação de senha
   Future<Response> solicitarRecuperacaoSenha(ForgotPassword dados) async {
     return await _postComFallback('/api/auth/forgot-password', dados.toJson());
   }
 
-  /// POST /api/auth/verify-code - Verifica código de validação
   Future<Response> verificarCodigo(VerifyCode dados) async {
     return await _postComFallback('/api/auth/verify-code', dados.toJson());
   }
 
-  /// POST /api/auth/reset-password - Redefine a senha do usuário
   Future<Response> redefinirSenha(ResetPassword dados) async {
     return await _postComFallback('/api/auth/reset-password', dados.toJson());
   }

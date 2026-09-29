@@ -1,12 +1,11 @@
 import 'package:get/get.dart';
-import '../services/api_servico.dart';
-import '../services/armazenamento_servico.dart';
-import '../services/autenticacao_servico.dart';
-import '../services/painel_servico.dart';
-import '../services/patrimonio_servico.dart';
-import '../services/professor_servico.dart';
-import '../services/perfil_servico.dart';
-import '../controllers/autenticacao_controlador.dart';
+import '../service/api_servico.dart';
+import '../service/autenticacao_servico.dart';
+import '../service/painel_servico.dart';
+import '../service/patrimonio_servico.dart';
+import '../service/professor_servico.dart';
+import '../service/perfil_servico.dart';
+import '../controller/autenticacao_controlador.dart';
 
 class InicialVinculacao extends Bindings {
   @override

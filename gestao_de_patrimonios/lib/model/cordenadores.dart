@@ -1,5 +1,3 @@
-// Coordenadores
-
 class Coordenadores {
   final String email;
   final String password;
@@ -17,7 +15,6 @@ class Coordenadores {
     required this.cpf,
   });
 
-  /// Converte o JSON recebido da API em uma instância de Coordenadores
   factory Coordenadores.fromJson(Map<String, dynamic> json) {
     return Coordenadores(
       email: json['email'],
@@ -29,7 +26,6 @@ class Coordenadores {
     );
   }
 
-  /// Converte os dados para o formato esperado pelo backend
   Map<String, dynamic> toJson() {
     return {
       "email": email,
@@ -41,4 +37,3 @@ class Coordenadores {
     };
   }
 }
-

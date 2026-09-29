@@ -1,4 +1,3 @@
-// Patrimonios
 class Patrimonios {
   final String codigo;
   final String nome;
@@ -26,7 +25,6 @@ class Patrimonios {
     this.observacoes,
   });
 
-  /// Converte o JSON recebido da API em uma instância de Patrimonios
   factory Patrimonios.fromJson(Map<String, dynamic> json) {
     return Patrimonios(
       codigo: json['codigo']?.toString() ?? '',
@@ -47,7 +45,6 @@ class Patrimonios {
     );
   }
 
-  /// Converte os dados para o formato esperado pelo backend
   Map<String, dynamic> toJson() {
     return {
       "codigo": codigo,
@@ -68,4 +65,3 @@ class Patrimonios {
     };
   }
 }
-

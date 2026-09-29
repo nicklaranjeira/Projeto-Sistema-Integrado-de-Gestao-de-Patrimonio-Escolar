@@ -1,5 +1,3 @@
-// Professores
-
 class Professores {
   final String nome;
   final String email;
@@ -19,7 +17,6 @@ class Professores {
     required this.cpf,
   });
 
-  /// Converte o JSON recebido da API em uma instância de Professores
   factory Professores.fromJson(Map<String, dynamic> json) {
     return Professores(
       nome: json['nome'],
@@ -32,7 +29,6 @@ class Professores {
     );
   }
 
-  /// Converte os dados para o formato esperado pelo backend
   Map<String, dynamic> toJson() {
     return {
       "nome": nome,

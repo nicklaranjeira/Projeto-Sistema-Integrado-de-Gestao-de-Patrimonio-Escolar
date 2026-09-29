@@ -1,5 +1,3 @@
-// forgot password
-
 class ForgotPassword {
   final String email;
 
@@ -13,8 +11,6 @@ class ForgotPassword {
     return {"email": email};
   }
 }
-
-// verify code
 
 class VerifyCode {
   final String email;
@@ -30,8 +26,6 @@ class VerifyCode {
     return {"email": email, "code": code};
   }
 }
-
-// reset password
 
 class ResetPassword {
   final String email;

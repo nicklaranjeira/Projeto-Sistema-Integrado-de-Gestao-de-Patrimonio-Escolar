@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../controllers/patrimonio_controlador.dart';
-import '../controllers/professor_controlador.dart';
+import '../controller/patrimonio_controlador.dart';
+import '../controller/professor_controlador.dart';
 
 class PatrimonioVinculacao extends Bindings {
   @override

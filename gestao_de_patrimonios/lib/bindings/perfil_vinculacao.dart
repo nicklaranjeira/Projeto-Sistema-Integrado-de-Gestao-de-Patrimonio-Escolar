@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/perfil_controlador.dart';
+import '../controller/perfil_controlador.dart';
 
 class PerfilVinculacao extends Bindings {
   @override

@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/meus_patrimonios_controlador.dart';
+import '../controller/meus_patrimonios_controlador.dart';
 
 class MeusPatrimoniosVinculacao extends Bindings {
   @override

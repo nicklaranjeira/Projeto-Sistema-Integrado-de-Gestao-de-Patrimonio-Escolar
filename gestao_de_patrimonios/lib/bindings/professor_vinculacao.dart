@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/professor_controlador.dart';
+import '../controller/professor_controlador.dart';
 
 class ProfessorVinculacao extends Bindings {
   @override
