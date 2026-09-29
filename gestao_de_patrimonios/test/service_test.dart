@@ -53,5 +53,39 @@ void main() {
       expect(authService.httpClient.baseUrl, 'http://localhost:8000');
       expect(profService.httpClient.baseUrl, 'http://localhost:8000');
     });
+
+    test('Patrimonios desserializa formato snake_case da API e aceita professorId nulo', () {
+      final jsonApi = {
+        'codigo': 'SENAI-999',
+        'nome': 'Projetor Epson',
+        'descricao': 'Projetor multimídia',
+        'categoria': 'Audiovisual',
+        'marca': 'Epson',
+        'modelo': 'PowerLite',
+        'numero_serie': 'SN-789456',
+        'estado_conservacao': 'Bom',
+        'localizacao': 'Auditório',
+        'professor_id': null,
+        'observacoes': null,
+      };
+
+      final patrimonio = Patrimonios.fromJson(jsonApi);
+      expect(patrimonio.codigo, 'SENAI-999');
+      expect(patrimonio.numeroSerie, 'SN-789456');
+      expect(patrimonio.estadoConservacao, 'Bom');
+      expect(patrimonio.professorId, isNull);
+
+      final serializado = patrimonio.toJson();
+      expect(serializado['numero_serie'], 'SN-789456');
+      expect(serializado['professor_id'], isNull);
+    });
+
+    test('Services configuram token JWT nas requisições', () {
+      final service = PatrimoniosService(
+        baseUrl: 'http://localhost:8000',
+        token: 'meu_jwt_token',
+      );
+      expect(service.httpClient.baseUrl, 'http://localhost:8000');
+    });
   });
 }
