@@ -1,46 +1,857 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
+
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+    <title>Patrimônio Escolar</title>
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="gestao_de_patrimonios">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>gestao_de_patrimonios</title>
-  <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/script.js"></script>s
 </head>
-<body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+<body>
+
+    <!-- ==============================
+         LOGIN
+    =============================== -->
+
+    <main class="tela login-tela">
+
+        <div class="login-container">
+
+            <div class="logo">
+                ▣
+            </div>
+
+            <h1>Patrimônio Escolar</h1>
+
+            <p class="subtitulo">
+                Sistema Integrado de Gestão Patrimonial
+            </p>
+
+            <form>
+
+                <div class="campo">
+                    <label for="email">E-mail</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Digite seu e-mail"
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="senha">Senha</label>
+
+                    <input
+                        type="password"
+                        id="senha"
+                        placeholder="Digite sua senha"
+                    >
+                </div>
+
+                <button
+                    type="button"
+                    class="botao botao-principal"
+                >
+                    Entrar
+                </button>
+
+            </form>
+
+            <a href="#" class="link">
+                Esqueci minha senha
+            </a>
+
+            <a href="#" class="link">
+                Criar conta de coordenador
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <!-- ==============================
+         DASHBOARD DO COORDENADOR
+    =============================== -->
+
+    <main class="tela">
+
+        <div class="conteudo">
+
+            <header class="cabecalho">
+
+                <div>
+                    <h1>Olá, Coordenador!</h1>
+
+                    <p>
+                        Escola SENAI • Gestão patrimonial
+                    </p>
+                </div>
+
+                <button class="botao-icone">
+                    ⚙
+                </button>
+
+            </header>
+
+
+            <!-- INDICADORES -->
+
+            <section class="indicadores">
+
+                <article class="card-indicador">
+
+                    <span>Total de patrimônios</span>
+
+                    <strong>128</strong>
+
+                </article>
+
+                <article class="card-indicador verde">
+
+                    <span>Em uso</span>
+
+                    <strong>84</strong>
+
+                </article>
+
+                <article class="card-indicador">
+
+                    <span>Disponíveis</span>
+
+                    <strong>32</strong>
+
+                </article>
+
+                <article class="card-indicador amarelo">
+
+                    <span>Manutenção</span>
+
+                    <strong>12</strong>
+
+                </article>
+
+            </section>
+
+
+            <!-- CATEGORIAS -->
+
+            <section>
+
+                <div class="titulo-secao">
+
+                    <h2>
+                        Patrimônios por categoria
+                    </h2>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="barra-item">
+
+                        <span>Informática</span>
+
+                        <div class="barra">
+                            <div style="width: 80%;"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="barra-item">
+
+                        <span>Eletrônicos</span>
+
+                        <div class="barra">
+                            <div style="width: 65%;"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="barra-item">
+
+                        <span>Laboratório</span>
+
+                        <div class="barra">
+                            <div style="width: 45%;"></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- MOVIMENTAÇÕES -->
+
+            <section>
+
+                <div class="titulo-secao">
+
+                    <h2>
+                        Últimas movimentações
+                    </h2>
+
+                    <a href="#">
+                        Ver todas
+                    </a>
+
+                </div>
+
+
+                <article class="card movimentacao">
+
+                    <div>
+
+                        <h3>
+                            Notebook Dell Latitude
+                        </h3>
+
+                        <p>
+                            Atribuído para Prof. Carlos
+                        </p>
+
+                    </div>
+
+                    <span>
+                        Hoje
+                    </span>
+
+                </article>
+
+
+                <article class="card movimentacao">
+
+                    <div>
+
+                        <h3>
+                            Projetor Epson
+                        </h3>
+
+                        <p>
+                            Devolvido ao estoque
+                        </p>
+
+                    </div>
+
+                    <span>
+                        Ontem
+                    </span>
+
+                </article>
+
+            </section>
+
+        </div>
+
+
+        <!-- MENU INFERIOR -->
+
+        <nav class="menu-inferior">
+
+            <a href="#" class="menu-item ativo">
+                <span>⌂</span>
+                Início
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>▣</span>
+                Patrimônios
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>♙</span>
+                Professores
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>●</span>
+                Perfil
+            </a>
+
+        </nav>
+
+    </main>
+
+
+    <!-- ==============================
+         PATRIMÔNIOS
+    =============================== -->
+
+    <main class="tela">
+
+        <div class="conteudo">
+
+            <header class="cabecalho">
+
+                <div>
+
+                    <h1>Patrimônios</h1>
+
+                    <p>
+                        128 bens cadastrados
+                    </p>
+
+                </div>
+
+                <button class="botao-icone">
+                    ⚙
+                </button>
+
+            </header>
+
+
+            <input
+                type="text"
+                class="campo-pesquisa"
+                placeholder="🔎  Buscar patrimônio"
+            >
+
+
+            <div class="filtros">
+
+                <button class="filtro ativo">
+                    Todos
+                </button>
+
+                <button class="filtro">
+                    Em uso
+                </button>
+
+                <button class="filtro">
+                    Disponível
+                </button>
+
+                <button class="filtro">
+                    Manutenção
+                </button>
+
+            </div>
+
+
+            <!-- PATRIMÔNIO 1 -->
+
+            <article class="card patrimonio">
+
+                <div class="patrimonio-topo">
+
+                    <div>
+
+                        <h3>
+                            Notebook Dell Latitude
+                        </h3>
+
+                        <p>
+                            Tombamento: PAT-2024-001
+                        </p>
+
+                        <p>
+                            Informática • Laboratório 01
+                        </p>
+
+                    </div>
+
+                    <span class="status em-uso">
+                        Em uso
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <!-- PATRIMÔNIO 2 -->
+
+            <article class="card patrimonio">
+
+                <div class="patrimonio-topo">
+
+                    <div>
+
+                        <h3>
+                            Projetor Epson
+                        </h3>
+
+                        <p>
+                            Tombamento: PAT-2024-002
+                        </p>
+
+                        <p>
+                            Eletrônicos • Sala 04
+                        </p>
+
+                    </div>
+
+                    <span class="status disponivel">
+                        Disponível
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <!-- PATRIMÔNIO 3 -->
+
+            <article class="card patrimonio">
+
+                <div class="patrimonio-topo">
+
+                    <div>
+
+                        <h3>
+                            Microscópio
+                        </h3>
+
+                        <p>
+                            Tombamento: PAT-2024-003
+                        </p>
+
+                        <p>
+                            Laboratório • Biologia
+                        </p>
+
+                    </div>
+
+                    <span class="status manutencao">
+                        Manutenção
+                    </span>
+
+                </div>
+
+            </article>
+
+        </div>
+
+
+        <button class="botao-flutuante">
+            +
+        </button>
+
+
+        <nav class="menu-inferior">
+
+            <a href="#" class="menu-item">
+                <span>⌂</span>
+                Início
+            </a>
+
+            <a href="#" class="menu-item ativo">
+                <span>▣</span>
+                Patrimônios
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>♙</span>
+                Professores
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>●</span>
+                Perfil
+            </a>
+
+        </nav>
+
+    </main>
+
+
+    <!-- ==============================
+         PROFESSORES
+    =============================== -->
+
+    <main class="tela">
+
+        <div class="conteudo">
+
+            <header class="cabecalho">
+
+                <div>
+
+                    <h1>Professores</h1>
+
+                    <p>
+                        24 professores cadastrados
+                    </p>
+
+                </div>
+
+            </header>
+
+
+            <input
+                type="text"
+                class="campo-pesquisa"
+                placeholder="🔎  Buscar professor"
+            >
+
+
+            <article class="card professor">
+
+                <div>
+
+                    <h3>
+                        Prof. Carlos Drummond
+                    </h3>
+
+                    <p>
+                        Matrícula: PROF-2024-01
+                    </p>
+
+                    <p>
+                        Departamento: Informática
+                    </p>
+
+                </div>
+
+                <span class="quantidade">
+                    4 bens
+                </span>
+
+            </article>
+
+
+            <article class="card professor">
+
+                <div>
+
+                    <h3>
+                        Profa. Maria Silva
+                    </h3>
+
+                    <p>
+                        Matrícula: PROF-2024-02
+                    </p>
+
+                    <p>
+                        Departamento: Ciências
+                    </p>
+
+                </div>
+
+                <span class="quantidade">
+                    2 bens
+                </span>
+
+            </article>
+
+
+            <article class="card professor">
+
+                <div>
+
+                    <h3>
+                        Prof. João Santos
+                    </h3>
+
+                    <p>
+                        Matrícula: PROF-2024-03
+                    </p>
+
+                    <p>
+                        Departamento: Matemática
+                    </p>
+
+                </div>
+
+                <span class="quantidade">
+                    1 bem
+                </span>
+
+            </article>
+
+        </div>
+
+
+        <button class="botao-flutuante">
+            +
+        </button>
+
+
+        <nav class="menu-inferior">
+
+            <a href="#" class="menu-item">
+                <span>⌂</span>
+                Início
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>▣</span>
+                Patrimônios
+            </a>
+
+            <a href="#" class="menu-item ativo">
+                <span>♙</span>
+                Professores
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>●</span>
+                Perfil
+            </a>
+
+        </nav>
+
+    </main>
+
+
+    <!-- ==============================
+         DETALHES DO PATRIMÔNIO
+    =============================== -->
+
+    <main class="tela">
+
+        <div class="conteudo">
+
+            <header class="cabecalho">
+
+                <div>
+
+                    <h1>Detalhes</h1>
+
+                    <p>
+                        PAT-2024-001
+                    </p>
+
+                </div>
+
+                <button class="botao-icone">
+                    ⋮
+                </button>
+
+            </header>
+
+
+            <section class="card detalhes">
+
+                <h2>
+                    Notebook Dell Latitude
+                </h2>
+
+                <span class="status em-uso">
+                    Em uso
+                </span>
+
+
+                <div class="informacao">
+
+                    <span>
+                        TOMBAMENTO
+                    </span>
+
+                    <strong>
+                        PAT-2024-001
+                    </strong>
+
+                </div>
+
+
+                <div class="informacao">
+
+                    <span>
+                        CATEGORIA
+                    </span>
+
+                    <strong>
+                        Informática
+                    </strong>
+
+                </div>
+
+
+                <div class="informacao">
+
+                    <span>
+                        MARCA
+                    </span>
+
+                    <strong>
+                        Dell
+                    </strong>
+
+                </div>
+
+
+                <div class="informacao">
+
+                    <span>
+                        NÚMERO DE SÉRIE
+                    </span>
+
+                    <strong>
+                        DL8829102
+                    </strong>
+
+                </div>
+
+
+                <div class="informacao">
+
+                    <span>
+                        LOCALIZAÇÃO
+                    </span>
+
+                    <strong>
+                        Laboratório de Informática 01
+                    </strong>
+
+                </div>
+
+
+                <div class="informacao">
+
+                    <span>
+                        RESPONSÁVEL
+                    </span>
+
+                    <strong>
+                        Prof. Carlos Drummond
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+            <button class="botao botao-principal">
+                Registrar devolução
+            </button>
+
+
+            <section>
+
+                <div class="titulo-secao">
+
+                    <h2>
+                        Histórico
+                    </h2>
+
+                </div>
+
+
+                <div class="linha-do-tempo">
+
+                    <div class="evento">
+
+                        <h3>
+                            Patrimônio atribuído
+                        </h3>
+
+                        <p>
+                            Prof. Carlos Drummond
+                        </p>
+
+                        <small>
+                            29/09/2026
+                        </small>
+
+                    </div>
+
+
+                    <div class="evento">
+
+                        <h3>
+                            Patrimônio cadastrado
+                        </h3>
+
+                        <p>
+                            Coordenação
+                        </p>
+
+                        <small>
+                            12/08/2026
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <!-- ==============================
+         PERFIL
+    =============================== -->
+
+    <main class="tela">
+
+        <div class="conteudo">
+
+            <div class="perfil">
+
+                <div class="avatar">
+                    CD
+                </div>
+
+                <h1>
+                    Carlos Drummond
+                </h1>
+
+                <p>
+                    Professor • Informática
+                </p>
+
+            </div>
+
+
+            <div class="opcoes-perfil">
+
+                <a href="#" class="opcao">
+                    <span>Dados pessoais</span>
+                    <strong>›</strong>
+                </a>
+
+                <a href="#" class="opcao">
+                    <span>Editar telefone</span>
+                    <strong>›</strong>
+                </a>
+
+                <a href="#" class="opcao">
+                    <span>Alterar senha</span>
+                    <strong>›</strong>
+                </a>
+
+                <a href="#" class="opcao">
+                    <span>Notificações</span>
+                    <strong>›</strong>
+                </a>
+
+                <a href="#" class="opcao sair">
+                    <span>Sair da conta</span>
+                    <strong>›</strong>
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <nav class="menu-inferior">
+
+            <a href="#" class="menu-item">
+                <span>▣</span>
+                Meus bens
+            </a>
+
+            <a href="#" class="menu-item ativo">
+                <span>●</span>
+                Perfil
+            </a>
+
+        </nav>
+
+    </main>
+
 </body>
+
 </html>
