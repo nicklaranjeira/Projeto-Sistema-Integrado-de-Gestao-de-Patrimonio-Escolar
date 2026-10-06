@@ -5,7 +5,7 @@ import '../../../model/patrimonio_modelo.dart';
 import '../../../model/professor_modelo.dart';
 import '../../../routes/rotas_app.dart';
 import '../../widgets/botao_personalizado.dart';
-import '../../widgets/campo_texto_personalizado.dart';
+import '../../widgets/texto_personalizado.dart';
 import '../../widgets/cracha_status.dart';
 
 /// Visão de Detalhes do Patrimônio (RF07) - Consulta aprofundada, Atribuição, Devolução e Linha do Tempo.

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
 import '../widgets/botao_personalizado.dart';
-import '../widgets/campo_texto_personalizado.dart';
+import '../widgets/texto_personalizado.dart';
 
 /// Visão de Validação de Código - Etapa 2 (RF03): Inserção do código numérico de 6 dígitos.
 class ValidacaoView extends GetView<AutenticacaoControlador> {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
 import '../widgets/botao_personalizado.dart';
-import '../widgets/campo_texto_personalizado.dart';
+import '../widgets/texto_personalizado.dart';
 
 /// Visão de Redefinição de Senha - Etapa 3 (RF03): Definição de nova senha com confirmação idêntica.
 class RedefinirSenhaView extends GetView<AutenticacaoControlador> {

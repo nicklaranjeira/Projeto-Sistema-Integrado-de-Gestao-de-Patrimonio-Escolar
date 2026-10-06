@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controller/professor_controlador.dart';
 import '../../widgets/botao_personalizado.dart';
-import '../../widgets/campo_texto_personalizado.dart';
+import '../../widgets/texto_personalizado.dart';
 
 /// Visão de Formulário de Professor (RF06 / RN02) - Cadastro e Edição centralizada de docentes pelo Coordenador.
 class FormularioProfessorView extends GetView<ProfessorControlador> {

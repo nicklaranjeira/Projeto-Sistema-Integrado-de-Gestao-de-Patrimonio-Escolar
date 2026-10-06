@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
 import '../../controller/perfil_controlador.dart';
-import '..view/patrimonios.dart';
+import '../widgets/botao_personalizado.dart';
+import '../widgets/texto_personalizado.dart';
+import '../widgets/cracha_status.dart';
 
 /// Visão de Perfil do Usuário (RF09 / RN06 / RF04) - Dados cadastrais, atualização de contato e logout seguro.
 class PerfilView extends GetView<PerfilControlador> {

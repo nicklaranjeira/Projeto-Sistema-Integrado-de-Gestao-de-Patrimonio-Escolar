@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
 import '../../routes/rotas_app.dart';
 import '../widgets/botao_personalizado.dart';
-import '../widgets/campo_texto_personalizado.dart';
+import '../widgets/texto_personalizado.dart';
 
 /// Visão de Login (RF01) - Autenticação com credenciais e redirecionamento condicional.
 class LoginView extends GetView<AutenticacaoControlador> {

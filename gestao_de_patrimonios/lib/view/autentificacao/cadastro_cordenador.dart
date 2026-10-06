@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
 import '../widgets/botao_personalizado.dart';
-import '../widgets/campo_texto_personalizado.dart';
+import '../widgets/texto_personalizado.dart';
 
 /// Visão de Cadastro de Coordenador (RF02 / RN01) - Cadastro restrito de administradores gestores.
 class CadastroCoordenadorView extends GetView<AutenticacaoControlador> {

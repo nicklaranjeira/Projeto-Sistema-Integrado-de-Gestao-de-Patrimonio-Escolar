@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controller/patrimonio_controlador.dart';
 import '../../widgets/botao_personalizado.dart';
-import '../../widgets/campo_texto_personalizado.dart';
+import '../../widgets/texto_personalizado.dart';
 
 /// Visão de Formulário de Patrimônio (RF07) - Cadastro e Edição de bens escolares.
 class FormularioPatrimonioView extends GetView<PatrimonioControlador> {

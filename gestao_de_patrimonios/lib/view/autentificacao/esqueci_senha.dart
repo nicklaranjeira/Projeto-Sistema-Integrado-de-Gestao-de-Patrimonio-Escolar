@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
 import '../widgets/botao_personalizado.dart';
-import '../widgets/campo_texto_personalizado.dart';
+import '../widgets/texto_personalizado.dart';
 
 /// Visão de Recuperação de Senha - Etapa 1 (RF03): Solicitação de código por e-mail.
 class EsqueciSenhaView extends GetView<AutenticacaoControlador> {
