@@ -6,19 +6,19 @@ export 'widgets/card_estatistica.dart';
 export 'widgets/card_patrimonio.dart';
 export 'widgets/estado_vazio.dart';
 
-export 'autenticacao/login_dart';
-export 'autenticacao/cadastro_coordenador.dart';
-export 'autenticacao/esqueci_senha.dart';
-export 'autenticacao/validacao.dart';
-export 'autenticacao/redefinir_senha.dart';
+export 'autentificacao/login.dart';
+export 'autentificacao/cadastro_cordenador.dart';
+export 'autentificacao/esqueci_senha.dart';
+export 'autentificacao/validacao.dart';
+export 'autentificacao/redefinir_senha.dart';
 
 export 'coordenador/painel_controle.dart';
-export 'coordenador/patrimonios/gestao_patrimonios_visao.dart';
-export 'coordenador/patrimonios/formulario_patrimonio_visao.dart';
-export 'coordenador/patrimonios/detalhes_patrimonio_visao.dart';
-export 'coordenador/professores/gestao_professores_visao.dart';
-export 'coordenador/professores/formulario_professor_visao.dart';
-export 'coordenador/professores/detalhes_professor_visao.dart';
+export 'coordenador/patrimonios/gestao_patrimonios.dart';
+export 'coordenador/patrimonios/formularios_patrimonios.dart';
+export 'coordenador/patrimonios/detalhes_patrimonios.dart';
+export 'coordenador/professores/gestao_professores.dart';
+export 'coordenador/professores/formulario_professores.dart';
+export 'coordenador/professores/detalhes_professores.dart';
 
-export 'professor/meus_patrimonios_visao.dart';
-export 'perfil/perfil_visao.dart';
+export 'professor/meus_patrimonios.dart';
+export 'perfil/perfil.dart';
