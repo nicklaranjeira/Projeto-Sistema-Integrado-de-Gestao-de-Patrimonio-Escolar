@@ -2,15 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../model/professores.dart';
 
+/// Service responsável pela comunicação com os endpoints de Professores.
 class ProfessoresService extends GetConnect {
   String? _customBaseUrl;
 
-  ProfessoresService({String? baseUrl, String? token}) {
+  ProfessoresService({String? baseUrl}) {
     _customBaseUrl = baseUrl;
     _configurar();
-    if (token != null && token.isNotEmpty) {
-      definirToken(token);
-    }
   }
 
   @override
@@ -31,105 +29,92 @@ class ProfessoresService extends GetConnect {
     httpClient.defaultContentType = 'application/json';
   }
 
-  void definirToken(String token) {
-    httpClient.addRequestModifier<dynamic>((request) {
-      request.headers['Authorization'] = 'Bearer $token';
-      return request;
-    });
-  }
-
   Future<Response> _requisicaoComFallback({
     required String metodo,
-    required String endpoint,
+    required String rotaPrincipal,
     dynamic corpo,
     Map<String, dynamic>? query,
   }) async {
+    final rotaAlternativa = rotaPrincipal.replaceFirst('/api/v1', '');
+
     Response res;
     switch (metodo.toUpperCase()) {
       case 'GET':
-        res = await get(endpoint, query: query);
+        res = await get(rotaPrincipal, query: query);
+        if (res.statusCode == 404) {
+          res = await get(rotaAlternativa, query: query);
+        }
         break;
       case 'POST':
-        res = await post(endpoint, corpo);
+        res = await post(rotaPrincipal, corpo);
+        if (res.statusCode == 404) {
+          res = await post(rotaAlternativa, corpo);
+        }
         break;
       case 'PUT':
-        res = await put(endpoint, corpo);
+        res = await put(rotaPrincipal, corpo);
+        if (res.statusCode == 404) {
+          res = await put(rotaAlternativa, corpo);
+        }
         break;
       case 'DELETE':
-        res = await delete(endpoint);
+        res = await delete(rotaPrincipal);
+        if (res.statusCode == 404) {
+          res = await delete(rotaAlternativa);
+        }
         break;
       default:
-        res = await get(endpoint, query: query);
-    }
-
-    if (res.statusCode == 404) {
-      final rotaAlt = endpoint.contains('/admin/')
-          ? endpoint.replaceFirst('/admin/', '/')
-          : endpoint.replaceFirst('/api/', '/api/v1/');
-
-      switch (metodo.toUpperCase()) {
-        case 'GET':
-          final resAlt = await get(rotaAlt, query: query);
-          if (resAlt.isOk) return resAlt;
-          break;
-        case 'POST':
-          final resAlt = await post(rotaAlt, corpo);
-          if (resAlt.isOk) return resAlt;
-          break;
-        case 'PUT':
-          final resAlt = await put(rotaAlt, corpo);
-          if (resAlt.isOk) return resAlt;
-          break;
-        case 'DELETE':
-          final resAlt = await delete(rotaAlt);
-          if (resAlt.isOk) return resAlt;
-          break;
-      }
+        res = await get(rotaPrincipal, query: query);
     }
     return res;
   }
 
+  /// GET /api/v1/professores - Lista todos os professores
   Future<Response<List<Professores>>> listarProfessores() async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
-      endpoint: '/api/admin/professores',
+      rotaPrincipal: '/api/v1/professores',
     );
     return _parseListResponse(response);
   }
 
+  /// GET /api/v1/professores/{matricula} - Detalhes do professor por matrícula ou ID
   Future<Response<Professores>> buscarPorMatricula(String matricula) async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
-      endpoint: '/api/admin/professores/$matricula',
+      rotaPrincipal: '/api/v1/professores/$matricula',
     );
     return _parseSingleResponse(response);
   }
 
+  /// POST /api/v1/professores - Cadastra um novo professor
   Future<Response<Professores>> cadastrarProfessor(Professores professor) async {
     final response = await _requisicaoComFallback(
       metodo: 'POST',
-      endpoint: '/api/admin/professores',
+      rotaPrincipal: '/api/v1/professores',
       corpo: professor.toJson(),
     );
     return _parseSingleResponse(response);
   }
 
+  /// PUT /api/v1/professores/{matricula} - Atualiza dados do professor
   Future<Response<Professores>> atualizarProfessor(
     String matricula,
     Professores professor,
   ) async {
     final response = await _requisicaoComFallback(
       metodo: 'PUT',
-      endpoint: '/api/admin/professores/$matricula',
+      rotaPrincipal: '/api/v1/professores/$matricula',
       corpo: professor.toJson(),
     );
     return _parseSingleResponse(response);
   }
 
+  /// DELETE /api/v1/professores/{matricula} - Exclui um professor
   Future<Response> excluirProfessor(String matricula) async {
     return await _requisicaoComFallback(
       metodo: 'DELETE',
-      endpoint: '/api/admin/professores/$matricula',
+      rotaPrincipal: '/api/v1/professores/$matricula',
     );
   }
 
@@ -139,7 +124,7 @@ class ProfessoresService extends GetConnect {
         statusCode: response.statusCode,
         statusText: response.statusText,
         headers: response.headers,
-        body: null,
+        body: [],
       );
     }
 
@@ -149,26 +134,20 @@ class ProfessoresService extends GetConnect {
     if (body is List) {
       listaJson = body;
     } else if (body is Map) {
-      final data = body['data'];
-      if (data is Map && data['professores'] is List) {
-        listaJson = data['professores'] as List<dynamic>;
-      } else if (data is List) {
-        listaJson = data;
+      if (body['data'] is Map && body['data']['professores'] is List) {
+        listaJson = body['data']['professores'] as List<dynamic>;
+      } else if (body['data'] is List) {
+        listaJson = body['data'] as List<dynamic>;
       } else if (body['professores'] is List) {
         listaJson = body['professores'] as List<dynamic>;
       }
     }
 
-    final lista = <Professores>[];
-    if (listaJson != null) {
-      for (final item in listaJson) {
-        try {
-          if (item is Map) {
-            lista.add(Professores.fromJson(Map<String, dynamic>.from(item)));
-          }
-        } catch (_) {}
-      }
-    }
+    final lista = listaJson
+            ?.map((item) =>
+                Professores.fromJson(Map<String, dynamic>.from(item as Map)))
+            .toList() ??
+        [];
 
     return Response<List<Professores>>(
       statusCode: response.statusCode,
@@ -184,7 +163,6 @@ class ProfessoresService extends GetConnect {
         statusCode: response.statusCode,
         statusText: response.statusText,
         headers: response.headers,
-        body: null,
       );
     }
 
@@ -192,20 +170,15 @@ class ProfessoresService extends GetConnect {
     Map<String, dynamic>? itemMap;
 
     if (body is Map) {
-      final data = body['data'];
-      if (data is Map) {
-        itemMap = Map<String, dynamic>.from(data);
+      if (body['data'] is Map) {
+        itemMap = Map<String, dynamic>.from(body['data'] as Map);
       } else {
         itemMap = Map<String, dynamic>.from(body);
       }
     }
 
     Professores? professor;
-    if (itemMap != null) {
-      try {
-        professor = Professores.fromJson(itemMap);
-      } catch (_) {}
-    }
+    professor = Professores.fromJson(itemMap);
 
     return Response<Professores>(
       statusCode: response.statusCode,

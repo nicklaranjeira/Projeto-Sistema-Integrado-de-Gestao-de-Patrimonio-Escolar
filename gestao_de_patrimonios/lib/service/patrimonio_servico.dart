@@ -21,9 +21,14 @@ class PatrimonioServico extends GetxService {
     return await _api.get('/api/patrimonios/$id');
   }
 
-  Future<Response> cadastrarPatrimonio(Map<String, dynamic> dados) async {
-    return await _api.post('/api/patrimonios', dados);
-  }
+  Future<Response> cadastrarPatrimonio(
+  Map<String, dynamic> dados,
+) async {
+  return await _api.post(
+    '/api/admin/patrimonios',
+    dados,
+  );
+}
 
   Future<Response> atualizarPatrimonio(int id, Map<String, dynamic> dados) async {
     return await _api.put('/api/patrimonios/$id', dados);

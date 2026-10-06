@@ -21,10 +21,12 @@ class PatrimoniosService extends GetConnect {
     super.onInit();
   }
 
+  /// Configuração de URL base dinâmica, timeouts e headers
   void _configurar() {
     if (_customBaseUrl != null && _customBaseUrl!.isNotEmpty) {
       httpClient.baseUrl = _customBaseUrl;
     } else {
+      // No Android Emulator usa 10.0.2.2. No Web, Desktop e iOS usa localhost
       final host = (GetPlatform.isAndroid && !kIsWeb) ? '10.0.2.2' : 'localhost';
       httpClient.baseUrl = 'http://$host:8000';
     }
@@ -33,166 +35,150 @@ class PatrimoniosService extends GetConnect {
     httpClient.defaultContentType = 'application/json';
   }
 
-  void definirToken(String token) {
-    httpClient.addRequestModifier<dynamic>((request) {
-      request.headers['Authorization'] = 'Bearer $token';
-      return request;
-    });
-  }
-
+  /// Atualiza dinamicamente a URL base da API
   void atualizarBaseUrl(String novaUrl) {
     _customBaseUrl = novaUrl;
     httpClient.baseUrl = novaUrl;
   }
 
+  /// Tenta a requisição na rota principal (/api/v1/...) e, se der 404, faz fallback para rota sem prefixo
   Future<Response> _requisicaoComFallback({
     required String metodo,
-    required String endpoint,
+    required String rotaPrincipal,
     dynamic corpo,
     Map<String, dynamic>? query,
   }) async {
+    final rotaAlternativa = rotaPrincipal.replaceFirst('/api/v1', '');
+
     Response res;
     switch (metodo.toUpperCase()) {
       case 'GET':
-        res = await get(endpoint, query: query);
+        res = await get(rotaPrincipal, query: query);
+        if (res.statusCode == 404) {
+          res = await get(rotaAlternativa, query: query);
+        }
         break;
       case 'POST':
-        res = await post(endpoint, corpo);
+        res = await post(rotaPrincipal, corpo);
+        if (res.statusCode == 404) {
+          res = await post(rotaAlternativa, corpo);
+        }
         break;
       case 'PUT':
-        res = await put(endpoint, corpo);
+        res = await put(rotaPrincipal, corpo);
+        if (res.statusCode == 404) {
+          res = await put(rotaAlternativa, corpo);
+        }
         break;
       case 'DELETE':
-        res = await delete(endpoint);
+        res = await delete(rotaPrincipal);
+        if (res.statusCode == 404) {
+          res = await delete(rotaAlternativa);
+        }
         break;
       default:
-        res = await get(endpoint, query: query);
-    }
-
-    if (res.statusCode == 404) {
-      final rotaAlt = endpoint.contains('/api/v1')
-          ? endpoint.replaceFirst('/api/v1', '/api')
-          : endpoint.replaceFirst('/api', '/api/v1');
-
-      switch (metodo.toUpperCase()) {
-        case 'GET':
-          final resAlt = await get(rotaAlt, query: query);
-          if (resAlt.isOk) return resAlt;
-          break;
-        case 'POST':
-          final resAlt = await post(rotaAlt, corpo);
-          if (resAlt.isOk) return resAlt;
-          break;
-        case 'PUT':
-          final resAlt = await put(rotaAlt, corpo);
-          if (resAlt.isOk) return resAlt;
-          break;
-        case 'DELETE':
-          final resAlt = await delete(rotaAlt);
-          if (resAlt.isOk) return resAlt;
-          break;
-      }
+        res = await get(rotaPrincipal, query: query);
     }
     return res;
   }
 
+  /// GET /api/v1/patrimonios - Recupera a lista completa de patrimônios
   Future<Response<List<Patrimonios>>> listarPatrimonios() async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
-      endpoint: '/api/patrimonios',
+      rotaPrincipal: '/api/v1/patrimonios',
     );
     return _parseListResponse(response);
   }
 
-  Future<Response<List<Patrimonios>>> listarMeusPatrimonios() async {
-    final response = await _requisicaoComFallback(
-      metodo: 'GET',
-      endpoint: '/api/patrimonios/meus',
-    );
-    return _parseListResponse(response);
-  }
-
+  /// GET /api/v1/patrimonios?q={termo} - Pesquisa patrimônios por termo
   Future<Response<List<Patrimonios>>> pesquisarPatrimonios(String termo) async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
-      endpoint: '/api/patrimonios',
+      rotaPrincipal: '/api/v1/patrimonios',
       query: {'q': termo},
     );
     return _parseListResponse(response);
   }
 
+  /// GET /api/v1/patrimonios/{codigo} - Obtém os detalhes de um patrimônio
   Future<Response<Patrimonios>> buscarPorCodigo(String codigo) async {
     final response = await _requisicaoComFallback(
       metodo: 'GET',
-      endpoint: '/api/patrimonios/$codigo',
+      rotaPrincipal: '/api/v1/patrimonios/$codigo',
     );
     return _parseSingleResponse(response);
   }
 
+  /// Alias para obter detalhes
   Future<Response<Patrimonios>> obterPatrimonio(String codigo) =>
       buscarPorCodigo(codigo);
 
+  /// POST /api/v1/patrimonios - Cadastra um novo patrimônio
   Future<Response<Patrimonios>> cadastrarPatrimonio(
     Patrimonios patrimonio,
   ) async {
     final response = await _requisicaoComFallback(
       metodo: 'POST',
-      endpoint: '/api/admin/patrimonios',
+      rotaPrincipal: '/api/v1/patrimonios',
       corpo: patrimonio.toJson(),
     );
     return _parseSingleResponse(response);
   }
 
+  /// PUT /api/v1/patrimonios/{codigo} - Atualiza um patrimônio existente
   Future<Response<Patrimonios>> atualizarPatrimonio(
     String codigo,
     Patrimonios patrimonio,
   ) async {
     final response = await _requisicaoComFallback(
       metodo: 'PUT',
-      endpoint: '/api/admin/patrimonios/$codigo',
+      rotaPrincipal: '/api/v1/patrimonios/$codigo',
       corpo: patrimonio.toJson(),
     );
     return _parseSingleResponse(response);
   }
 
+  /// DELETE /api/v1/patrimonios/{codigo} - Remove um patrimônio
   Future<Response> excluirPatrimonio(String codigo) async {
     return await _requisicaoComFallback(
       metodo: 'DELETE',
-      endpoint: '/api/admin/patrimonios/$codigo',
+      rotaPrincipal: '/api/v1/patrimonios/$codigo',
     );
   }
 
+  /// POST /api/v1/patrimonios/{codigo}/atribuir - Vincula o patrimônio a um professor
   Future<Response> atribuirPatrimonio(
     String codigo,
     AtribuicaoPatrimonio atribuicao,
   ) async {
-    final response = await _requisicaoComFallback(
+    return await _requisicaoComFallback(
       metodo: 'POST',
-      endpoint: '/api/admin/patrimonios/$codigo/atribuir',
+      rotaPrincipal: '/api/v1/patrimonios/$codigo/atribuir',
       corpo: atribuicao.toJson(),
     );
-    return response;
   }
 
+  /// POST /api/v1/patrimonios/{codigo}/devolver - Registra a devolução do patrimônio
   Future<Response> devolverPatrimonio(
     String codigo,
     DevolucaoPatrimonio devolucao,
   ) async {
-    final response = await _requisicaoComFallback(
+    return await _requisicaoComFallback(
       metodo: 'POST',
-      endpoint: '/api/admin/patrimonios/$codigo/devolver',
+      rotaPrincipal: '/api/v1/patrimonios/$codigo/devolver',
       corpo: devolucao.toJson(),
     );
-    return response;
   }
 
+  /// Decodifica respostas de lista tratando possíveis envelopes (ex: {"data": {"patrimonios": [...]}})
   Response<List<Patrimonios>> _parseListResponse(Response response) {
     if (!response.isOk || response.body == null) {
       return Response<List<Patrimonios>>(
         statusCode: response.statusCode,
         statusText: response.statusText,
         headers: response.headers,
-        body: null,
+        body: [],
       );
     }
 
@@ -202,26 +188,20 @@ class PatrimoniosService extends GetConnect {
     if (body is List) {
       listaJson = body;
     } else if (body is Map) {
-      final data = body['data'];
-      if (data is Map && data['patrimonios'] is List) {
-        listaJson = data['patrimonios'] as List<dynamic>;
-      } else if (data is List) {
-        listaJson = data;
+      if (body['data'] is Map && body['data']['patrimonios'] is List) {
+        listaJson = body['data']['patrimonios'] as List<dynamic>;
+      } else if (body['data'] is List) {
+        listaJson = body['data'] as List<dynamic>;
       } else if (body['patrimonios'] is List) {
         listaJson = body['patrimonios'] as List<dynamic>;
       }
     }
 
-    final lista = <Patrimonios>[];
-    if (listaJson != null) {
-      for (final item in listaJson) {
-        try {
-          if (item is Map) {
-            lista.add(Patrimonios.fromJson(Map<String, dynamic>.from(item)));
-          }
-        } catch (_) {}
-      }
-    }
+    final lista = listaJson
+            ?.map((item) =>
+                Patrimonios.fromJson(Map<String, dynamic>.from(item as Map)))
+            .toList() ??
+        [];
 
     return Response<List<Patrimonios>>(
       statusCode: response.statusCode,
@@ -231,13 +211,13 @@ class PatrimoniosService extends GetConnect {
     );
   }
 
+  /// Decodifica resposta de único objeto tratando envelopes (ex: {"data": {...}})
   Response<Patrimonios> _parseSingleResponse(Response response) {
     if (!response.isOk || response.body == null) {
       return Response<Patrimonios>(
         statusCode: response.statusCode,
         statusText: response.statusText,
         headers: response.headers,
-        body: null,
       );
     }
 
@@ -245,20 +225,15 @@ class PatrimoniosService extends GetConnect {
     Map<String, dynamic>? itemMap;
 
     if (body is Map) {
-      final data = body['data'];
-      if (data is Map) {
-        itemMap = Map<String, dynamic>.from(data);
+      if (body['data'] is Map) {
+        itemMap = Map<String, dynamic>.from(body['data'] as Map);
       } else {
         itemMap = Map<String, dynamic>.from(body);
       }
     }
 
     Patrimonios? patrimonio;
-    if (itemMap != null) {
-      try {
-        patrimonio = Patrimonios.fromJson(itemMap);
-      } catch (_) {}
-    }
+    patrimonio = Patrimonios.fromJson(itemMap);
 
     return Response<Patrimonios>(
       statusCode: response.statusCode,
@@ -269,5 +244,6 @@ class PatrimoniosService extends GetConnect {
   }
 }
 
+/// Alias para manter compatibilidade com nomes alternativos
 typedef PatrimoniosApi = PatrimoniosService;
 typedef PatrimonioService = PatrimoniosService;

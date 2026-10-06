@@ -15,9 +15,12 @@ class ProfessorServico extends GetxService {
     return await _api.get('/api/professores', query: query);
   }
 
+
   Future<Response> obterProfessorPorId(int id) async {
-    return await _api.get('/api/professores/$id');
-  }
+  return await _api.get(
+    '/api/admin/professores/$id',
+  );
+}
 
   Future<Response> cadastrarProfessor(Map<String, dynamic> dados) async {
     return await _api.post('/api/professores', dados);
