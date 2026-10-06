@@ -6,8 +6,8 @@ import '../widgets/botao_personalizado.dart';
 import '../widgets/campo_texto_personalizado.dart';
 
 /// Visão de Login (RF01) - Autenticação com credenciais e redirecionamento condicional.
-class LoginVisao extends GetView<AutenticacaoControlador> {
-  const LoginVisao({super.key});
+class LoginView extends GetView<AutenticacaoControlador> {
+  const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
