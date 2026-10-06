@@ -5,8 +5,8 @@ import '../widgets/botao_personalizado.dart';
 import '../widgets/campo_texto_personalizado.dart';
 
 /// Visão de Cadastro de Coordenador (RF02 / RN01) - Cadastro restrito de administradores gestores.
-class CadastroCoordenadorVisao extends GetView<AutenticacaoControlador> {
-  const CadastroCoordenadorVisao({super.key});
+class CadastroCoordenadorView extends GetView<AutenticacaoControlador> {
+  const CadastroCoordenadorView({super.key});
 
   @override
   Widget build(BuildContext context) {

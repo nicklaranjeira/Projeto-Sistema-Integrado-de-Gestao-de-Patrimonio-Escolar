@@ -4,9 +4,9 @@ import '../../controller/autenticacao_controlador.dart';
 import '../widgets/botao_personalizado.dart';
 import '../widgets/campo_texto_personalizado.dart';
 
-/// Visão de Recuperação de Senha - Etapa 1 (RF03): Solicitação de código por e-mail.
-class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
-  const EsqueciSenhaVisao({super.key});
+/// Visão de Validação de Código - Etapa 2 (RF03): Inserção do código numérico de 6 dígitos.
+class ValidacaoView extends GetView<AutenticacaoControlador> {
+  const ValidacaoView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Recuperação de Senha'),
+        title: const Text('Validação de Código'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.blueGrey.shade900,
@@ -27,7 +27,7 @@ class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Form(
-                key: controller.formularioEsqueciSenhaChave,
+                key: controller.formularioValidarCodigoChave,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -36,19 +36,19 @@ class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
+                        color: Colors.blue.shade50,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.amber.shade200),
+                        border: Border.all(color: Colors.blue.shade200),
                       ),
                       child: Icon(
-                        Icons.mark_email_read_outlined,
-                        color: Colors.amber.shade800,
+                        Icons.pin_outlined,
+                        color: tema.colorScheme.primary,
                         size: 36,
                       ),
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Esqueceu sua senha?',
+                      'Código de Confirmação',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 22,
@@ -57,18 +57,22 @@ class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'Informe seu e-mail institucional para enviarmos um código de validação de 6 dígitos.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blueGrey.shade600,
-                        height: 1.4,
+                    Obx(
+                      () => Text(
+                        controller.emailRecuperacao.value.isNotEmpty
+                            ? 'Insira o código enviado para:\n${controller.emailRecuperacao.value}'
+                            : 'Insira o código numérico de 6 dígitos gerado.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blueGrey.shade600,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 32),
 
-                    // Card de solicitação
+                    // Card do código
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -86,17 +90,17 @@ class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           CampoTextoPersonalizado(
-                            controlador: controller.emailController,
-                            rotulo: 'E-mail Cadastrado',
-                            dica: 'seu.email@escola.edu.br',
-                            iconePrefixo: Icons.email_outlined,
-                            tipoTeclado: TextInputType.emailAddress,
+                            controlador: controller.codigoController,
+                            rotulo: 'Código de 6 dígitos',
+                            dica: 'Ex: 123456',
+                            iconePrefixo: Icons.dialpad_rounded,
+                            tipoTeclado: TextInputType.number,
                             validador: (v) {
                               if (v == null || v.trim().isEmpty) {
-                                return 'Por favor, informe seu e-mail';
+                                return 'Informe o código recebido';
                               }
-                              if (!GetUtils.isEmail(v.trim())) {
-                                return 'Informe um e-mail com formato válido';
+                              if (v.trim().length != 6) {
+                                return 'O código deve conter exatamente 6 dígitos';
                               }
                               return null;
                             },
@@ -104,26 +108,48 @@ class EsqueciSenhaVisao extends GetView<AutenticacaoControlador> {
                           const SizedBox(height: 24),
                           Obx(
                             () => BotaoPersonalizado(
-                              texto: 'Enviar Código de Validação',
-                              icone: Icons.send_rounded,
+                              texto: 'Validar Código',
+                              icone: Icons.check_circle_outline_rounded,
                               carregando: controller.carregando.value,
-                              aoPressionar: controller.solicitarRecuperacaoSenha,
+                              aoPressionar: controller.validarCodigoRecuperacao,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+
+                    // Dica de ambiente
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Em modo de desenvolvimento, o código gerado é impresso no terminal onde o backend api.exe está rodando.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.amber.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
                     // Voltar
                     Center(
-                      child: TextButton.icon(
+                      child: TextButton(
                         onPressed: () => Get.back(),
-                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                        label: const Text('Lembrei minha senha, voltar ao login'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: tema.colorScheme.primary,
-                        ),
+                        child: const Text('Voltar à etapa anterior'),
                       ),
                     ),
                   ],
