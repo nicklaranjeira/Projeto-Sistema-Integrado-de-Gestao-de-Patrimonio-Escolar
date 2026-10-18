@@ -5,10 +5,14 @@ import '../model/professores.dart';
 /// Service responsável pela comunicação com os endpoints de Professores.
 class ProfessoresService extends GetConnect {
   String? _customBaseUrl;
+  String? _token;
 
-  ProfessoresService({String? baseUrl}) {
+  ProfessoresService({String? baseUrl, String? token}) {
     _customBaseUrl = baseUrl;
     _configurar();
+    if (token != null && token.isNotEmpty) {
+      definirToken(token);
+    }
   }
 
   @override
@@ -27,6 +31,24 @@ class ProfessoresService extends GetConnect {
 
     httpClient.timeout = const Duration(seconds: 10);
     httpClient.defaultContentType = 'application/json';
+  }
+
+  /// Define o token JWT de autenticação para as requisições
+  void definirToken(String token) {
+    _token = token;
+    httpClient.addRequestModifier<dynamic>((request) {
+      request.headers['Authorization'] = 'Bearer $token';
+      return request;
+    });
+  }
+
+  /// Retorna o token JWT atual, se definido
+  String? get token => _token;
+
+  /// Atualiza dinamicamente a URL base da API
+  void atualizarBaseUrl(String novaUrl) {
+    _customBaseUrl = novaUrl;
+    httpClient.baseUrl = novaUrl;
   }
 
   Future<Response> _requisicaoComFallback({
@@ -78,6 +100,16 @@ class ProfessoresService extends GetConnect {
     return _parseListResponse(response);
   }
 
+  /// GET /api/v1/professores?q={termo} - Pesquisa professores por termo
+  Future<Response<List<Professores>>> pesquisarProfessores(String termo) async {
+    final response = await _requisicaoComFallback(
+      metodo: 'GET',
+      rotaPrincipal: '/api/v1/professores',
+      query: {'q': termo},
+    );
+    return _parseListResponse(response);
+  }
+
   /// GET /api/v1/professores/{matricula} - Detalhes do professor por matrícula ou ID
   Future<Response<Professores>> buscarPorMatricula(String matricula) async {
     final response = await _requisicaoComFallback(
@@ -86,6 +118,10 @@ class ProfessoresService extends GetConnect {
     );
     return _parseSingleResponse(response);
   }
+
+  /// Alias para obter detalhes
+  Future<Response<Professores>> obterProfessor(String matricula) =>
+      buscarPorMatricula(matricula);
 
   /// POST /api/v1/professores - Cadastra um novo professor
   Future<Response<Professores>> cadastrarProfessor(Professores professor) async {
@@ -178,7 +214,9 @@ class ProfessoresService extends GetConnect {
     }
 
     Professores? professor;
-    professor = Professores.fromJson(itemMap);
+    if (itemMap != null) {
+      professor = Professores.fromJson(itemMap);
+    }
 
     return Response<Professores>(
       statusCode: response.statusCode,
@@ -188,3 +226,7 @@ class ProfessoresService extends GetConnect {
     );
   }
 }
+
+/// Alias para manter compatibilidade com nomes alternativos
+typedef ProfessoresApi = ProfessoresService;
+typedef ProfessorService = ProfessoresService;

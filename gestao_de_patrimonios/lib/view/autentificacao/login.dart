@@ -194,8 +194,9 @@ class LoginView extends GetView<AutenticacaoControlador> {
                     const SizedBox(height: 28),
 
                     // Rodapé de Cadastro de Coordenador (RN01)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           'É um novo gestor escolar?',

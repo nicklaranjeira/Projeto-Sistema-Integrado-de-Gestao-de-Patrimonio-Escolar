@@ -4,6 +4,7 @@ import '../../controller/painel_controlador.dart';
 import '../../routes/rotas_app.dart';
 import '../widgets/card_estatistica.dart';
 import '../widgets/card_patrimonio.dart';
+import '../widgets/menu_inferior.dart';
 
 /// Visão do Painel do Coordenador (RF05) - Dashboard de indicadores patrimoniais e ações rápidas.
 class PainelCoordenadorView extends GetView<PainelControlador> {
@@ -358,6 +359,7 @@ class PainelCoordenadorView extends GetView<PainelControlador> {
           ),
         );
       }),
+      bottomNavigationBar: const MenuInferior(indiceAtual: 0),
     );
   }
 }

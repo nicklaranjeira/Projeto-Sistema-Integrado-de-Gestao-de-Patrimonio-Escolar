@@ -4,6 +4,7 @@ import '../../../controller/professor_controlador.dart';
 import '../../../routes/rotas_app.dart';
 import '../../widgets/cracha_status.dart';
 import '../../widgets/estado_vazio.dart';
+import '../../widgets/menu_inferior.dart';
 
 /// Visão de Gestão de Professores (RF06) - Listagem de docentes com indicador de bens sob responsabilidade.
 class GestaoProfessoresView extends GetView<ProfessorControlador> {
@@ -273,6 +274,7 @@ class GestaoProfessoresView extends GetView<ProfessorControlador> {
           ),
         ],
       ),
+      bottomNavigationBar: const MenuInferior(indiceAtual: 2),
     );
   }
 }

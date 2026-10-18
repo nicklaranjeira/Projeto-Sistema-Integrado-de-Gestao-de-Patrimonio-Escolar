@@ -81,11 +81,28 @@ void main() {
     });
 
     test('Services configuram token JWT nas requisições', () {
-      final service = PatrimoniosService(
+      final patService = PatrimoniosService(
         baseUrl: 'http://localhost:8000',
         token: 'meu_jwt_token',
       );
-      expect(service.httpClient.baseUrl, 'http://localhost:8000');
+      expect(patService.httpClient.baseUrl, 'http://localhost:8000');
+      expect(patService.token, 'meu_jwt_token');
+
+      patService.definirToken('novo_jwt_token');
+      expect(patService.token, 'novo_jwt_token');
+
+      final profService = ProfessoresService(
+        baseUrl: 'http://localhost:8000',
+        token: 'prof_jwt_token',
+      );
+      expect(profService.httpClient.baseUrl, 'http://localhost:8000');
+      expect(profService.token, 'prof_jwt_token');
+
+      profService.definirToken('novo_prof_token');
+      expect(profService.token, 'novo_prof_token');
+
+      profService.atualizarBaseUrl('http://localhost:9000');
+      expect(profService.httpClient.baseUrl, 'http://localhost:9000');
     });
   });
 }

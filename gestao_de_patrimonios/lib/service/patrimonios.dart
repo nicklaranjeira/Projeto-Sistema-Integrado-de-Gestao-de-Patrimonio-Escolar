@@ -6,6 +6,7 @@ import '../model/devolucao.dart';
 
 class PatrimoniosService extends GetConnect {
   String? _customBaseUrl;
+  String? _token;
 
   PatrimoniosService({String? baseUrl, String? token}) {
     _customBaseUrl = baseUrl;
@@ -34,6 +35,18 @@ class PatrimoniosService extends GetConnect {
     httpClient.timeout = const Duration(seconds: 10);
     httpClient.defaultContentType = 'application/json';
   }
+
+  /// Define o token JWT de autenticação para as requisições
+  void definirToken(String token) {
+    _token = token;
+    httpClient.addRequestModifier<dynamic>((request) {
+      request.headers['Authorization'] = 'Bearer $token';
+      return request;
+    });
+  }
+
+  /// Retorna o token JWT atual, se definido
+  String? get token => _token;
 
   /// Atualiza dinamicamente a URL base da API
   void atualizarBaseUrl(String novaUrl) {
@@ -233,7 +246,9 @@ class PatrimoniosService extends GetConnect {
     }
 
     Patrimonios? patrimonio;
-    patrimonio = Patrimonios.fromJson(itemMap);
+    if (itemMap != null) {
+      patrimonio = Patrimonios.fromJson(itemMap);
+    }
 
     return Response<Patrimonios>(
       statusCode: response.statusCode,

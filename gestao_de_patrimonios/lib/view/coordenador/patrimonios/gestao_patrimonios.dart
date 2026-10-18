@@ -4,6 +4,7 @@ import '../../../controller/patrimonio_controlador.dart';
 import '../../../routes/rotas_app.dart';
 import '../../widgets/card_patrimonio.dart';
 import '../../widgets/estado_vazio.dart';
+import '../../widgets/menu_inferior.dart';
 
 /// Visão de Gestão de Patrimônios (RF07) - Listagem com busca, filtros por status/categoria e acesso a novos cadastros.
 class GestaoPatrimoniosView extends GetView<PatrimonioControlador> {
@@ -167,6 +168,7 @@ class GestaoPatrimoniosView extends GetView<PatrimonioControlador> {
           ),
         ],
       ),
+      bottomNavigationBar: const MenuInferior(indiceAtual: 1),
     );
   }
 }

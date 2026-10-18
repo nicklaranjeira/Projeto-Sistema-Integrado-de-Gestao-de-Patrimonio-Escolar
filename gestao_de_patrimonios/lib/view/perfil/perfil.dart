@@ -5,6 +5,7 @@ import '../../controller/perfil_controlador.dart';
 import '../widgets/botao_personalizado.dart';
 import '../widgets/texto_personalizado.dart';
 import '../widgets/cracha_status.dart';
+import '../widgets/menu_inferior.dart';
 
 /// Visão de Perfil do Usuário (RF09 / RN06 / RF04) - Dados cadastrais, atualização de contato e logout seguro.
 class PerfilView extends GetView<PerfilControlador> {
@@ -205,6 +206,7 @@ class PerfilView extends GetView<PerfilControlador> {
           ),
         );
       }),
+      bottomNavigationBar: const MenuInferior(indiceAtual: 3),
     );
   }
 

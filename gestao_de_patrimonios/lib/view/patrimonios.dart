@@ -5,6 +5,7 @@ export 'widgets/botao_personalizado.dart';
 export 'widgets/card_estatistica.dart';
 export 'widgets/card_patrimonio.dart';
 export 'widgets/estado_vazio.dart';
+export 'widgets/menu_inferior.dart';
 
 export 'autentificacao/login.dart';
 export 'autentificacao/cadastro_cordenador.dart';

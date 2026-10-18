@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../bindings/autenticacao_vinculacao.dart';
 import '../bindings/meus_patrimonios_vinculacao.dart';
@@ -28,102 +27,87 @@ class PaginasApp {
   static final rotas = [
     GetPage(
       name: RotasApp.LOGIN,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Login'),
+      page: () => const LoginView(),
       binding: AutenticacaoVinculacao(),
       transition: Transition.fadeIn,
     ),
     GetPage(
       name: RotasApp.CADASTRO,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Cadastro de Coordenador'),
+      page: () => const CadastroCoordenadorView(),
       binding: AutenticacaoVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ESQUECI_SENHA,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Recuperação de Senha'),
+      page: () => const EsqueciSenhaView(),
       binding: AutenticacaoVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.VALIDAR_CODIGO,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Validação de Código'),
+      page: () => const ValidacaoView(),
       binding: AutenticacaoVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.REDEFINIR_SENHA,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Redefinição de Senha'),
+      page: () => const RedefinirSenhaView(),
       binding: AutenticacaoVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ADMIN_PAINEL,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Painel do Coordenador'),
+      page: () => const PainelCoordenadorView(),
       binding: PainelVinculacao(),
       transition: Transition.fadeIn,
     ),
     GetPage(
       name: RotasApp.ADMIN_PATRIMONIOS,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Gestão de Patrimônios'),
+      page: () => const GestaoPatrimoniosView(),
       binding: PatrimonioVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ADMIN_NOVO_PATRIMONIO,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Cadastrar Patrimônio'),
+      page: () => const FormularioPatrimonioView(),
       binding: PatrimonioVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ADMIN_DETALHES_PATRIMONIO,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Detalhes do Patrimônio e Histórico'),
+      page: () => const DetalhesPatrimonioView(),
       binding: PatrimonioVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ADMIN_PROFESSORES,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Gestão de Professores'),
+      page: () => const GestaoProfessoresView(),
       binding: ProfessorVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ADMIN_NOVO_PROFESSOR,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Cadastrar Professor'),
+      page: () => const FormularioProfessorView(),
       binding: ProfessorVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.ADMIN_DETALHES_PROFESSOR,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Detalhes do Professor'),
+      page: () => const DetalhesProfessorView(),
       binding: ProfessorVinculacao(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: RotasApp.DOCENTE_MEUS_PATRIMONIOS,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Meus Patrimônios'),
+      page: () => const MeusPatrimoniosView(),
       binding: MeusPatrimoniosVinculacao(),
       transition: Transition.fadeIn,
     ),
     GetPage(
       name: RotasApp.PERFIL,
-      page: () => const _VisualizacaoTemporaria(titulo: 'Meu Perfil'),
+      page: () => const PerfilView(),
       binding: PerfilVinculacao(),
       transition: Transition.rightToLeft,
     ),
   ];
-}
-
-class _VisualizacaoTemporaria extends StatelessWidget {
-  final String titulo;
-  const _VisualizacaoTemporaria({required this.titulo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(titulo)),
-      body: Center(
-        child: Text('Tela: $titulo'),
-      ),
-    );
-  }
 }
