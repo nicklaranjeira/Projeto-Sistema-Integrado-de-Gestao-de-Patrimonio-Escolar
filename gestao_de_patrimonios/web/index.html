@@ -66,7 +66,7 @@
                 Esqueci minha senha
             </a>
 
-            <a href="#" class="link">
+            <a href="#" class="link" id="link-criar-conta-coordenador">
                 Criar conta de coordenador
             </a>
 
@@ -613,9 +613,9 @@
 
                 <div>
 
-                    <h1>Detalhes</h1>
+                    <h1 id="titulo-tela-detalhes">Detalhes</h1>
 
-                    <p>
+                    <p id="subtitulo-cabecalho-detalhes">
                         PAT-2024-001
                     </p>
 
@@ -628,9 +628,19 @@
             </header>
 
 
-            <section class="card detalhes">
+            <div id="seletor-bens-professor" style="display: none; margin-bottom: 15px;"></div>
 
-                <h2>
+            <div id="container-vazio-meus-bens" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1; margin-top: 15px;">
+                <div style="font-size: 48px; margin-bottom: 12px; color: #94a3b8;">📦</div>
+                <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 8px;">Nenhum patrimônio sob sua guarda</h2>
+                <p style="color: #64748b; font-size: 14px; max-width: 380px; margin: 0 auto; line-height: 1.5;">
+                    No momento, você não possui nenhum bem escolar vinculado à sua responsabilidade. Quando a coordenação atribuir um equipamento ao seu nome, ele aparecerá aqui para acompanhamento e devolução.
+                </p>
+            </div>
+
+            <section class="card detalhes" id="card-detalhes-patrimonio">
+
+                <h2 id="titulo-detalhes-pat">
                     Notebook Dell Latitude
                 </h2>
 
@@ -645,7 +655,7 @@
                         TOMBAMENTO
                     </span>
 
-                    <strong>
+                    <strong id="tombo-detalhes-pat">
                         PAT-2024-001
                     </strong>
 
@@ -658,7 +668,7 @@
                         CATEGORIA
                     </span>
 
-                    <strong>
+                    <strong id="categoria-detalhes-pat">
                         Informática
                     </strong>
 
@@ -671,7 +681,7 @@
                         MARCA
                     </span>
 
-                    <strong>
+                    <strong id="marca-detalhes-pat">
                         Dell
                     </strong>
 
@@ -684,7 +694,7 @@
                         NÚMERO DE SÉRIE
                     </span>
 
-                    <strong>
+                    <strong id="serie-detalhes-pat">
                         DL8829102
                     </strong>
 
@@ -697,7 +707,7 @@
                         LOCALIZAÇÃO
                     </span>
 
-                    <strong>
+                    <strong id="localizacao-detalhes-pat">
                         Laboratório de Informática 01
                     </strong>
 
@@ -907,6 +917,122 @@
             </a>
 
         </nav>
+
+    </main>
+
+
+    <!-- ==============================
+         CADASTRO DE COORDENADOR (TELA 6)
+    =============================== -->
+
+    <main class="tela tela-cadastro" id="tela-cadastro-coordenador">
+
+        <div class="conteudo conteudo-cadastro">
+
+            <header class="cabecalho-cadastro">
+                <button type="button" class="botao-icone" id="btn-voltar-login-coord" title="Voltar ao login">
+                    ←
+                </button>
+
+                <div class="logo-cadastro">
+                    ▣
+                </div>
+
+                <div style="width: 40px;"></div>
+            </header>
+
+            <h1 class="titulo-cadastro">Criar Conta</h1>
+
+            <p class="subtitulo">
+                Cadastro de Coordenador • Gestão Patrimonial
+            </p>
+
+            <form id="form-cadastro-coordenador">
+
+                <!-- EMAIL -->
+                <div class="campo">
+                    <label for="cad-coord-email">E-mail</label>
+                    <input
+                        type="email"
+                        id="cad-coord-email"
+                        placeholder="coordenacao@escola.gov.br"
+                        required
+                    >
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="campo">
+                    <label for="cad-coord-password">Password</label>
+                    <div class="campo-senha-wrapper">
+                        <input
+                            type="password"
+                            id="cad-coord-password"
+                            placeholder="Digite sua senha de acesso"
+                            required
+                        >
+                        <button type="button" class="btn-toggle-senha" id="btn-toggle-senha-cad" title="Visualizar senha">👁</button>
+                    </div>
+                </div>
+
+                <!-- NOME -->
+                <div class="campo">
+                    <label for="cad-coord-nome">Nome</label>
+                    <input
+                        type="text"
+                        id="cad-coord-nome"
+                        placeholder="Digite seu nome completo"
+                        required
+                    >
+                </div>
+
+                <!-- DEPARTAMENTO -->
+                <div class="campo">
+                    <label for="cad-coord-departamento">Departamento</label>
+                    <input
+                        type="text"
+                        id="cad-coord-departamento"
+                        placeholder="Ex: Coordenação Geral e Pedagógica"
+                        required
+                    >
+                </div>
+
+                <!-- TELEFONE -->
+                <div class="campo">
+                    <label for="cad-coord-telefone">Telefone</label>
+                    <input
+                        type="tel"
+                        id="cad-coord-telefone"
+                        placeholder="(11) 98765-4321"
+                        required
+                    >
+                </div>
+
+                <!-- CPF -->
+                <div class="campo">
+                    <label for="cad-coord-cpf">CPF</label>
+                    <input
+                        type="text"
+                        id="cad-coord-cpf"
+                        placeholder="000.000.000-00"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="button"
+                    class="botao botao-principal"
+                    id="btn-confirmar-cadastro-coordenador"
+                >
+                    Criar conta de coordenador
+                </button>
+
+            </form>
+
+            <a href="#" class="link" id="link-voltar-login-coord">
+                Já possui uma conta? Fazer login
+            </a>
+
+        </div>
 
     </main>
 

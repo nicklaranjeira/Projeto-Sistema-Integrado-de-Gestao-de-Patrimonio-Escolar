@@ -39,7 +39,7 @@ class EstatisticasPainelModelo {
 
   factory EstatisticasPainelModelo.fromJson(Map<String, dynamic> json) {
     Map<String, int> categorias = {};
-    final rawCat = json['por_categoria'] ?? json['categorias'];
+    final rawCat = json['por_categoria'] ?? json['categorias'] ?? json['porCategoria'];
     if (rawCat is Map) {
       rawCat.forEach((k, v) {
         categorias[k.toString()] = v is int ? v : int.tryParse(v.toString()) ?? 0;
@@ -52,14 +52,15 @@ class EstatisticasPainelModelo {
       return int.tryParse(v.toString()) ?? 0;
     }
 
-    final alocadosVal = json['total_alocados'] ?? json['em_uso'];
-    final disponiveisVal = json['total_disponiveis'] ?? json['disponiveis'];
-    final manutencaoVal = json['total_manutencao'] ?? json['em_manutencao'];
-    final profVal = json['total_professores'] ?? json['total_usuarios'];
-    final usuariosVal = json['total_usuarios'] ?? json['total_professores'];
+    final alocadosVal = json['total_alocados'] ?? json['em_uso'] ?? json['patrimoniosEmUso'];
+    final disponiveisVal = json['total_disponiveis'] ?? json['disponiveis'] ?? json['patrimoniosDisponiveis'];
+    final manutencaoVal = json['total_manutencao'] ?? json['em_manutencao'] ?? json['patrimoniosEmManutencao'];
+    final profVal = json['total_professores'] ?? json['total_usuarios'] ?? json['totalProfessores'];
+    final usuariosVal = json['total_usuarios'] ?? json['total_professores'] ?? json['totalProfessores'];
+    final totalPat = json['total_patrimonios'] ?? json['totalPatrimonios'];
 
     return EstatisticasPainelModelo(
-      totalPatrimonios: parseVal(json['total_patrimonios']),
+      totalPatrimonios: parseVal(totalPat),
       totalAlocados: parseVal(alocadosVal),
       totalDisponiveis: parseVal(disponiveisVal),
       totalManutencao: parseVal(manutencaoVal),

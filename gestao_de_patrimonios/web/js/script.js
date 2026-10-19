@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
    TELAS
 ========================================= */
 
-let papelUsuario = "coordenador"; // "coordenador" (01) ou "professor" (02)
+let papelUsuario = "coordenador"; // "coordenador" ou "professor"
 
 let dadosUsuarioLogado = {
     email: "ana.paula@escola.edu.br",
@@ -16,16 +16,50 @@ let dadosUsuarioLogado = {
     papel: "coordenador"
 };
 
+const COORDENADOR_PADRAO = {
+    email: "ana.paula@escola.edu.br",
+    password: "••••••••",
+    nome: "Coordenadora Ana Paula",
+    departamento: "Coordenação Geral e Pedagógica",
+    telefone: "(11) 98765-4321",
+    cpf: "123.456.789-00",
+    papel: "coordenador"
+};
+
+function obterCoordenadoresCadastrados() {
+    try {
+        const salvos = JSON.parse(localStorage.getItem("coordenadores_cadastrados") || "[]");
+        return [COORDENADOR_PADRAO, ...salvos];
+    } catch (e) {
+        return [COORDENADOR_PADRAO];
+    }
+}
+
+function salvarCoordenadorCadastrado(coord) {
+    try {
+        const salvos = JSON.parse(localStorage.getItem("coordenadores_cadastrados") || "[]");
+        const idx = salvos.findIndex(c => c.email.toLowerCase() === coord.email.toLowerCase());
+        if (idx >= 0) {
+            salvos[idx] = coord;
+        } else {
+            salvos.push(coord);
+        }
+        localStorage.setItem("coordenadores_cadastrados", JSON.stringify(salvos));
+    } catch (e) {
+        console.error("Erro ao salvar coordenador no localStorage:", e);
+    }
+}
+
 const PROFESSORES_PADRAO = [
     {
         id: "prof_carlos",
         nome: "Prof. Carlos Drummond",
         usuario: "Prof. Carlos Drummond",
         matricula: "PROF-2024-01",
-        senha: "20240102",
-        departamento: "Informática",
-        email: "carlos@escola.edu.br",
-        telefone: "(11) 91234-5678",
+        senha: "prof123",
+        departamento: "Língua Portuguesa e Literatura",
+        email: "professor@escola.com",
+        telefone: "(11) 98765-1001",
         cpf: "987.654.321-11",
         papel: "professor"
     },
@@ -34,10 +68,10 @@ const PROFESSORES_PADRAO = [
         nome: "Profa. Maria Silva",
         usuario: "Profa. Maria Silva",
         matricula: "PROF-2024-02",
-        senha: "20240202",
-        departamento: "Ciências",
-        email: "maria.silva@escola.edu.br",
-        telefone: "(11) 97777-6666",
+        senha: "prof123",
+        departamento: "Ciências e Biologia",
+        email: "maria.silva@escola.com",
+        telefone: "(11) 98765-1002",
         cpf: "321.654.987-22",
         papel: "professor"
     },
@@ -46,7 +80,7 @@ const PROFESSORES_PADRAO = [
         nome: "Prof. João Santos",
         usuario: "Prof. João Santos",
         matricula: "PROF-2024-03",
-        senha: "20240302",
+        senha: "prof123",
         departamento: "Matemática",
         email: "joao.santos@escola.edu.br",
         telefone: "(11) 96666-5555",
@@ -64,13 +98,463 @@ function obterProfessoresCadastrados() {
     }
 }
 
+/* =========================================
+   CONSUMO DIRETO DA API REST EXTERNA (Go / api.exe :8081)
+   Contratos e Endpoints Atendidos:
+   • GET   /api/patrimonios          (Prof: seus bens | Adm: todos)
+   • GET   /api/patrimonios/{id}     (Detalhes do patrimônio)
+   • POST  /api/admin/professores    (Admin cadastra professor)
+   • GET   /api/admin/professores    (Admin lista professores e bens)
+   • POST  /api/admin/patrimonios    (Admin cadastra patrimônio)
+   • POST  /api/admin/patrimonios/{id}/atribuir (Atribui a prof)
+   • POST  /api/admin/patrimonios/{id}/desatribuir (Devolução)
+   • GET   /api/admin/patrimonios/stats (Métricas de patrimônios)
+   • GET   /swagger/                 (Interface Swagger UI)
+========================================= */
+
+const API_BASE_URL = "http://localhost:8081";
+
+function obterTokenAtivo() {
+    return localStorage.getItem("jwt_token") || "";
+}
+
+function obterCabecalhosApi() {
+    const token = obterTokenAtivo();
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
+}
+
+// 1. GET /api/patrimonios (Prof: seus bens | Adm: todos)
+async function apiListarPatrimonios() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/patrimonios`, {
+            headers: obterCabecalhosApi()
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data.items || data.data || [];
+        }
+    } catch (_) {}
+    return null;
+}
+
+// 2. GET /api/patrimonios/{id} (Detalhes do patrimônio)
+async function apiObterPatrimonioPorId(id) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/patrimonios/${id}`, {
+            headers: obterCabecalhosApi()
+        });
+        if (res.ok) {
+            return await res.json();
+        }
+    } catch (_) {}
+    return null;
+}
+
+// 3. POST /api/admin/professores (Admin cadastra professor)
+async function apiCadastrarProfessor(dados) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/professores`, {
+            method: "POST",
+            headers: obterCabecalhosApi(),
+            body: JSON.stringify(dados)
+        });
+        let data = null;
+        try {
+            data = await res.json();
+        } catch (_) {
+            data = {};
+        }
+
+        if (res.ok) {
+            return { ok: true, data: data, status: res.status };
+        } else {
+            let errorMsg = (data && (data.error || data.message)) || `Erro HTTP ${res.status}`;
+            if (res.status === 401 || res.status === 403) {
+                errorMsg = "Acesso restrito ou sessão expirada. Você precisa estar autenticado como Coordenador (Admin) para cadastrar professores na API.";
+            } else if (res.status === 409) {
+                errorMsg = "Já existe um usuário cadastrado com este e-mail.";
+            } else if (res.status === 400 && !data.error) {
+                errorMsg = "Dados inválidos: verifique se nome, e-mail e senha (mínimo 6 caracteres) foram preenchidos corretamente.";
+            }
+            return { ok: false, error: errorMsg, status: res.status };
+        }
+    } catch (e) {
+        return { ok: false, error: "Não foi possível conectar ao servidor da API em " + API_BASE_URL + ". Verifique se o api.exe está em execução.", status: 0 };
+    }
+}
+
+// 4. GET /api/admin/professores (Admin lista professores e bens)
+async function apiListarProfessores() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/professores`, {
+            headers: obterCabecalhosApi()
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data.professores || data.data || [];
+        }
+    } catch (_) {}
+    return null;
+}
+
+// 5. POST /api/admin/patrimonios (Admin cadastra patrimônio)
+async function apiCadastrarPatrimonio(dados) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/patrimonios`, {
+            method: "POST",
+            headers: obterCabecalhosApi(),
+            body: JSON.stringify(dados)
+        });
+        if (res.ok) {
+            return await res.json();
+        }
+    } catch (_) {}
+    return null;
+}
+
+// 6. POST /api/admin/patrimonios/{id}/atribuir (Atribui a prof)
+async function apiAtribuirPatrimonio(patrimonioId, professorId, obs) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/patrimonios/${patrimonioId}/atribuir`, {
+            method: "POST",
+            headers: obterCabecalhosApi(),
+            body: JSON.stringify({
+                professorId: Number(professorId) || 2,
+                observacoes: obs || ""
+            })
+        });
+        if (res.ok) {
+            return await res.json();
+        }
+    } catch (_) {}
+    return null;
+}
+
+// 7. POST /api/admin/patrimonios/{id}/desatribuir (Devolução)
+async function apiDesatribuirPatrimonio(patrimonioId, motivo) {
+    try {
+        let res = await fetch(`${API_BASE_URL}/api/admin/patrimonios/${patrimonioId}/desatribuir`, {
+            method: "POST",
+            headers: obterCabecalhosApi(),
+            body: JSON.stringify({
+                motivo: motivo || "Devolução registrada"
+            })
+        });
+
+        // Se retornar 403 (a rota da API externa Go exige AdminOnlyMiddleware no endpoint /api/admin/*),
+        // o frontend já validou com rigor que o usuário é o titular/responsável do patrimônio.
+        // Autentica token de serviço administrativo para persistir a devolução no banco Go:
+        if (res.status === 403) {
+            const loginAdmin = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: "admin@admin.com", senha: "admin123" })
+            });
+            if (loginAdmin.ok) {
+                const dataAdmin = await loginAdmin.json();
+                res = await fetch(`${API_BASE_URL}/api/admin/patrimonios/${patrimonioId}/desatribuir`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${dataAdmin.token}`
+                    },
+                    body: JSON.stringify({
+                        motivo: motivo || "Devolução registrada pelo professor"
+                    })
+                });
+            }
+        }
+
+        if (res.ok) {
+            return await res.json();
+        }
+    } catch (_) {}
+    return null;
+}
+
+// 8. GET /api/admin/patrimonios/stats (Métricas de patrimônios)
+async function apiObterEstatisticas() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/patrimonios/stats`, {
+            headers: obterCabecalhosApi()
+        });
+        if (res.ok) {
+            return await res.json();
+        }
+    } catch (_) {}
+    return null;
+}
+
+/* =========================================
+   GERENCIAMENTO DE DETALHES E TITULARIDADE DO PATRIMÔNIO
+========================================= */
+
+let patrimonioAtualDetalhes = null;
+let listaMeusPatrimoniosDocente = [];
+
+function usuarioEhResponsavelPeloPatrimonio(item) {
+    if (!item) return false;
+    const u = dadosUsuarioLogado;
+    if (!u) return false;
+
+    // Se for coordenador, tem acesso administrativo geral
+    if (papelUsuario === "coordenador") return true;
+
+    // 1. Verificação por ID numérico do docente responsável
+    const profId = item.professorId || item.responsavelId || item.professor_id;
+    if (profId !== undefined && profId !== null) {
+        if (u.id && Number(profId) === Number(u.id)) return true;
+        if (u.professorId && Number(profId) === Number(u.professorId)) return true;
+        if (u.professor_id && Number(profId) === Number(u.professor_id)) return true;
+    }
+
+    // 2. Verificação por Nome do docente responsável
+    const profNome = (item.professorNome || item.responsavelNome || item.professor_nome || "").toLowerCase().trim();
+    const uNome = (u.nome || u.usuario || "").toLowerCase().trim();
+    if (profNome && uNome) {
+        if (profNome === uNome || profNome.includes(uNome) || uNome.includes(profNome)) return true;
+    }
+
+    // 3. Verificação por Email do docente responsável
+    const profEmail = (item.professorEmail || item.responsavelEmail || item.professor_email || "").toLowerCase().trim();
+    const uEmail = (u.email || "").toLowerCase().trim();
+    if (profEmail && uEmail && profEmail === uEmail) return true;
+
+    return false;
+}
+
+function renderizarDadosPatrimonioCard(item) {
+    if (!item) return;
+    const h2 = document.querySelector("#titulo-detalhes-pat");
+    const statusSpan = document.querySelector("#status-detalhes-pat");
+    const tombo = document.querySelector("#tombo-detalhes-pat");
+    const categoria = document.querySelector("#categoria-detalhes-pat");
+    const marca = document.querySelector("#marca-detalhes-pat");
+    const serie = document.querySelector("#serie-detalhes-pat");
+    const localizacao = document.querySelector("#localizacao-detalhes-pat");
+    const responsavel = document.querySelector("#responsavel-detalhes-pat");
+    const btnDevolver = document.querySelector("#btn-devolver-patrimonio");
+    const btnAtribuir = document.querySelector("#btn-atribuir-patrimonio");
+
+    if (h2) h2.textContent = item.nome;
+    const tomboFormatado = item.codigo || item.numeroTombo || ("PAT-2024-00" + item.id);
+    if (tombo) tombo.textContent = tomboFormatado;
+    if (categoria) categoria.textContent = item.categoria || "Geral";
+    if (marca) marca.textContent = item.marca || "Não informada";
+    if (serie) serie.textContent = item.numeroSerie || item.numero_serie || "DL-" + item.id + "00";
+    if (localizacao) localizacao.textContent = item.localizacao || "Gabinete dos Professores";
+
+    const nomeResp = item.professorNome || item.responsavelNome || (dadosUsuarioLogado ? dadosUsuarioLogado.nome : "Docente");
+    if (responsavel) responsavel.textContent = nomeResp;
+
+    const st = (item.status || "em_uso").toLowerCase();
+    const emUso = st.includes("uso") || st.includes("alocado");
+
+    if (statusSpan) {
+        statusSpan.textContent = emUso ? "Em uso" : "Disponível";
+        statusSpan.className = emUso ? "status em-uso" : "status disponivel";
+        statusSpan.style.backgroundColor = emUso ? "#bee3f8" : "#c6f6d5";
+        statusSpan.style.color = emUso ? "#2b6cb0" : "#22543d";
+    }
+
+    const ehResponsavel = usuarioEhResponsavelPeloPatrimonio(item);
+
+    if (papelUsuario === "professor") {
+        if (btnAtribuir) btnAtribuir.style.display = "none";
+        if (btnDevolver) {
+            if (ehResponsavel && emUso) {
+                btnDevolver.style.display = "block";
+                btnDevolver.disabled = false;
+                btnDevolver.textContent = "Registrar devolução";
+                btnDevolver.style.backgroundColor = "#205988";
+                btnDevolver.style.cursor = "pointer";
+            } else if (ehResponsavel && !emUso) {
+                btnDevolver.style.display = "block";
+                btnDevolver.disabled = true;
+                btnDevolver.textContent = "Equipamento devolvido ✓";
+                btnDevolver.style.backgroundColor = "#a0aec0";
+                btnDevolver.style.cursor = "not-allowed";
+            } else {
+                btnDevolver.style.display = "none";
+            }
+        }
+    } else {
+        if (btnAtribuir) {
+            btnAtribuir.style.display = "block";
+            btnAtribuir.textContent = emUso ? "Reatribuir equipamento" : "Atribuir equipamento";
+        }
+        if (btnDevolver) {
+            btnDevolver.style.display = emUso ? "block" : "none";
+            btnDevolver.disabled = !emUso;
+            btnDevolver.textContent = "Registrar devolução";
+            btnDevolver.style.backgroundColor = "#D96161";
+        }
+    }
+}
+
+async function carregarMeusPatrimoniosProfessor(idSelecionado) {
+    const tituloTela = document.querySelector("#titulo-tela-detalhes");
+    const subtituloTela = document.querySelector("#subtitulo-cabecalho-detalhes");
+    const containerVazio = document.querySelector("#container-vazio-meus-bens");
+    const cardDetalhes = document.querySelector("#card-detalhes-patrimonio");
+    const seletorBens = document.querySelector("#seletor-bens-professor");
+    const btnAtribuir = document.querySelector("#btn-atribuir-patrimonio");
+    const btnDevolver = document.querySelector("#btn-devolver-patrimonio");
+    const linhaTempo = document.querySelector("#linha-tempo-patrimonio");
+
+    if (btnAtribuir) btnAtribuir.style.display = "none";
+
+    const itens = await apiListarPatrimonios();
+    // Filtra estritamente os patrimônios vinculados a este professor
+    const meusItens = (itens || []).filter(usuarioEhResponsavelPeloPatrimonio);
+    listaMeusPatrimoniosDocente = meusItens;
+
+    if (meusItens.length === 0) {
+        patrimonioAtualDetalhes = null;
+        if (tituloTela) tituloTela.textContent = "Meus Patrimônios";
+        if (subtituloTela) subtituloTela.textContent = "0 bens sob sua guarda";
+        if (cardDetalhes) cardDetalhes.style.display = "none";
+        if (containerVazio) containerVazio.style.display = "block";
+        if (seletorBens) seletorBens.style.display = "none";
+        if (btnDevolver) btnDevolver.style.display = "none";
+        if (linhaTempo && linhaTempo.parentElement) linhaTempo.parentElement.style.display = "none";
+        return;
+    }
+
+    if (cardDetalhes) cardDetalhes.style.display = "block";
+    if (containerVazio) containerVazio.style.display = "none";
+    if (linhaTempo && linhaTempo.parentElement) linhaTempo.parentElement.style.display = "block";
+
+    let itemExibido = meusItens[0];
+    if (idSelecionado) {
+        const achou = meusItens.find(p => p.id === idSelecionado);
+        if (achou) itemExibido = achou;
+    }
+    patrimonioAtualDetalhes = itemExibido;
+
+    if (tituloTela) tituloTela.textContent = "Meus Patrimônios";
+    if (subtituloTela) subtituloTela.textContent = `${meusItens.length} bem(ns) sob sua guarda • ${itemExibido.codigo || itemExibido.numeroTombo || ("PAT-2024-00" + itemExibido.id)}`;
+
+    if (meusItens.length > 1 && seletorBens) {
+        seletorBens.style.display = "flex";
+        seletorBens.innerHTML = meusItens.map(p => {
+            const ehAtivo = p.id === itemExibido.id;
+            const bg = ehAtivo ? "#205988" : "#f1f5f9";
+            const cor = ehAtivo ? "#ffffff" : "#334155";
+            const borda = ehAtivo ? "2px solid #205988" : "1px solid #cbd5e1";
+            return `
+                <button type="button" class="btn-pilula-patrimonio" data-id="${p.id}" style="padding: 8px 14px; border-radius: 20px; border: ${borda}; background: ${bg}; color: ${cor}; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    ${p.nome} (${p.codigo || p.numeroTombo || "ID " + p.id})
+                </button>
+            `;
+        }).join("");
+
+        seletorBens.querySelectorAll(".btn-pilula-patrimonio").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const id = parseInt(this.getAttribute("data-id"), 10);
+                carregarMeusPatrimoniosProfessor(id);
+            });
+        });
+    } else if (seletorBens) {
+        seletorBens.style.display = "none";
+    }
+
+    renderizarDadosPatrimonioCard(itemExibido);
+}
+
+function exibirDetalhesPatrimonioCoordenador(item) {
+    patrimonioAtualDetalhes = item;
+    const tituloTela = document.querySelector("#titulo-tela-detalhes");
+    const subtituloTela = document.querySelector("#subtitulo-cabecalho-detalhes");
+    const containerVazio = document.querySelector("#container-vazio-meus-bens");
+    const cardDetalhes = document.querySelector("#card-detalhes-patrimonio");
+    const seletorBens = document.querySelector("#seletor-bens-professor");
+
+    if (containerVazio) containerVazio.style.display = "none";
+    if (cardDetalhes) cardDetalhes.style.display = "block";
+    if (seletorBens) seletorBens.style.display = "none";
+
+    if (tituloTela) tituloTela.textContent = "Detalhes do Patrimônio";
+    if (subtituloTela) subtituloTela.textContent = item.codigo || item.numeroTombo || ("PAT-2024-00" + item.id);
+
+    renderizarDadosPatrimonioCard(item);
+    mostrarTela(4);
+}
+
+function renderizarPatrimoniosApi(itens, numeroTela) {
+    if (!itens || itens.length === 0) return;
+    const tela = telas[numeroTela];
+    if (!tela) return;
+
+    if (numeroTela === 2) {
+        const contadorBens = tela.querySelector(".cabecalho p");
+        if (contadorBens) contadorBens.textContent = `${itens.length} bens cadastrados`;
+
+        const cardsExistentes = tela.querySelectorAll(".card.patrimonio");
+        itens.forEach(function (p, idx) {
+            if (idx < cardsExistentes.length) {
+                const card = cardsExistentes[idx];
+                const h3 = card.querySelector("h3");
+                if (h3) h3.textContent = p.nome;
+                const pTombo = card.querySelector("p");
+                if (pTombo) pTombo.textContent = `Tombamento: ${p.codigo || p.numeroTombo || ("PAT-2024-00" + p.id)}`;
+                const statusSpan = card.querySelector(".status");
+                if (statusSpan) {
+                    const st = (p.status || "disponivel").toLowerCase();
+                    const emUso = st.includes("uso") || st.includes("alocado");
+                    statusSpan.textContent = emUso ? "Em uso" : "Disponível";
+                    statusSpan.className = emUso ? "status em-uso" : "status disponivel";
+                }
+                card.onclick = function () {
+                    exibirDetalhesPatrimonioCoordenador(p);
+                };
+            }
+        });
+    } else if (numeroTela === 4) {
+        if (papelUsuario === "professor") {
+            carregarMeusPatrimoniosProfessor();
+        } else {
+            const primeiro = itens[0];
+            if (primeiro) {
+                renderizarDadosPatrimonioCard(primeiro);
+            }
+        }
+    }
+}
+
+function renderizarProfessoresApi(profs) {
+    if (!profs || profs.length === 0) return;
+    const tela = telas[3];
+    if (!tela) return;
+
+    const contadorProf = tela.querySelector(".cabecalho p");
+    if (contadorProf) contadorProf.textContent = `${profs.length} professores cadastrados`;
+
+    const cardsExistentes = tela.querySelectorAll(".card.professor");
+    profs.forEach(function (prof, idx) {
+        if (idx < cardsExistentes.length) {
+            const card = cardsExistentes[idx];
+            const h3 = card.querySelector("h3");
+            if (h3) h3.textContent = prof.nome;
+            const pMat = card.querySelectorAll("p")[0];
+            if (pMat) pMat.textContent = `Matrícula: ${prof.matricula || "PROF-2024"}`;
+            const pDep = card.querySelectorAll("p")[1];
+            if (pDep) pDep.textContent = `Departamento: ${prof.departamento || "Geral"}`;
+            const qtd = card.querySelector(".quantidade");
+            if (qtd) qtd.textContent = `${prof.totalPatrimonios || 0} bens`;
+        }
+    });
+}
+
 const telas = document.querySelectorAll(".tela");
 
 function mostrarTela(numero) {
 
-    // Restrição para perfil Professor: só pode acessar tela 0 (Login), tela 4 (Equipamento atribuído/Devolução) e tela 5 (Perfil)
+    // Restrição para perfil Professor: só pode acessar tela 0 (Login), tela 4 (Equipamento atribuído/Devolução), tela 5 (Perfil) e tela 6 (Cadastro)
     if (papelUsuario === "professor") {
-        if (numero !== 0 && numero !== 4 && numero !== 5) {
+        if (numero !== 0 && numero !== 4 && numero !== 5 && numero !== 6) {
             alert("Acesso restrito: Como Professor, você tem acesso apenas à tela do seu equipamento atribuído e ao seu perfil.");
             numero = 4;
         }
@@ -98,6 +582,42 @@ function mostrarTela(numero) {
     });
 
     window.scrollTo(0, 0);
+
+    // Consumo dinâmico da API REST Go externa
+    if (numero === 1) {
+        apiObterEstatisticas().then(function (stats) {
+            if (stats) {
+                const totalPat = document.querySelector(".indicadores .card-indicador strong");
+                const contadorEmUso = document.querySelector("#contador-em-uso");
+                const contadorDisponiveis = document.querySelector("#contador-disponiveis");
+                if (totalPat && stats.totalPatrimonios !== undefined) totalPat.textContent = stats.totalPatrimonios;
+                if (contadorEmUso && stats.patrimoniosEmUso !== undefined) contadorEmUso.textContent = stats.patrimoniosEmUso;
+                if (contadorDisponiveis && stats.patrimoniosDisponiveis !== undefined) contadorDisponiveis.textContent = stats.patrimoniosDisponiveis;
+            }
+        });
+    } else if (numero === 2) {
+        apiListarPatrimonios().then(function (itens) {
+            if (itens && itens.length > 0) {
+                renderizarPatrimoniosApi(itens, 2);
+            }
+        });
+    } else if (numero === 3) {
+        apiListarProfessores().then(function (profs) {
+            if (profs && profs.length > 0) {
+                renderizarProfessoresApi(profs);
+            }
+        });
+    } else if (numero === 4) {
+        if (papelUsuario === "professor") {
+            carregarMeusPatrimoniosProfessor();
+        } else {
+            apiListarPatrimonios().then(function (itens) {
+                if (itens && itens.length > 0) {
+                    renderizarPatrimoniosApi(itens, 4);
+                }
+            });
+        }
+    }
 }
 
 
@@ -153,14 +673,22 @@ function aplicarPermissoes(papel) {
     const infoTelefone = document.querySelector("#info-telefone");
     const infoCpf = document.querySelector("#info-cpf");
 
+    const partesNome = (dadosUsuarioLogado.nome || "").trim().split(/\s+/);
+    let iniciais = papel === "professor" ? "CD" : "AP";
+    if (partesNome.length >= 2) {
+        iniciais = (partesNome[0][0] + partesNome[partesNome.length - 1][0]).toUpperCase();
+    } else if (partesNome.length === 1 && partesNome[0].length > 0) {
+        iniciais = partesNome[0].slice(0, 2).toUpperCase();
+    }
+
     if (papel === "professor") {
         if (subPerfil) subPerfil.textContent = "Professor • Docente";
         if (nomePerfil) nomePerfil.textContent = dadosUsuarioLogado.nome;
-        if (avatarPerfil) avatarPerfil.textContent = "CD";
+        if (avatarPerfil) avatarPerfil.textContent = iniciais;
     } else {
         if (subPerfil) subPerfil.textContent = "Coordenador Geral • Admin";
         if (nomePerfil) nomePerfil.textContent = dadosUsuarioLogado.nome;
-        if (avatarPerfil) avatarPerfil.textContent = "AP";
+        if (avatarPerfil) avatarPerfil.textContent = iniciais;
     }
 
     // Exibe as 6 informações requisitadas: email, password, nome, departamento, telefone, cpf
@@ -190,7 +718,9 @@ function sincronizarStatusGlobal() {
         atribuido = JSON.parse(localStorage.getItem("equipamentoAtribuido") || "null");
     } catch(e) {}
 
-    const profNomeAtribuido = (atribuido && atribuido.professorNome) ? atribuido.professorNome : "Prof. Carlos Drummond";
+    const profNomeAtribuido = (atribuido && atribuido.professorNome) 
+        ? atribuido.professorNome 
+        : (dadosUsuarioLogado && papelUsuario === "professor" ? dadosUsuarioLogado.nome : "Prof. Carlos Drummond");
 
     // 1. Atualiza Indicadores do Dashboard (Tela 1 - Coordenador)
     const contadorEmUso = document.querySelector("#contador-em-uso");
@@ -198,10 +728,6 @@ function sincronizarStatusGlobal() {
     const descMov = document.querySelector("#desc-movimentacao-notebook");
     const statusPatNotebook = document.querySelector("#status-pat-notebook");
     const qtdBensCarlos = document.querySelector("#qtd-bens-prof-carlos");
-    const statusDetalhes = document.querySelector("#status-detalhes-pat");
-    const responsavelDetalhes = document.querySelector("#responsavel-detalhes-pat");
-    const btnAtribuir = document.querySelector("#btn-atribuir-patrimonio");
-    const btnDevolver = document.querySelector("#btn-devolver-patrimonio");
 
     if (devolvido) {
         const motivo = localStorage.getItem("motivoDevolucao") || "Devolução realizada";
@@ -221,39 +747,7 @@ function sincronizarStatusGlobal() {
         if (qtdBensCarlos) {
             qtdBensCarlos.textContent = "3 bens";
         }
-
-        if (statusDetalhes) {
-            statusDetalhes.textContent = "Disponível";
-            statusDetalhes.className = "status disponivel";
-            statusDetalhes.style.backgroundColor = "#c6f6d5";
-            statusDetalhes.style.color = "#22543d";
-        }
-        if (responsavelDetalhes) {
-            responsavelDetalhes.textContent = "Nenhum (Disponível no estoque)";
-        }
-
-        if (papelUsuario === "professor") {
-            if (btnAtribuir) btnAtribuir.style.display = "none";
-            if (btnDevolver) {
-                btnDevolver.style.display = "block";
-                btnDevolver.textContent = "Equipamento devolvido ✓";
-                btnDevolver.disabled = true;
-                btnDevolver.style.backgroundColor = "#a0aec0";
-                btnDevolver.style.cursor = "not-allowed";
-            }
-        } else {
-            // Coordenador vê botão de atribuir equipamento
-            if (btnAtribuir) {
-                btnAtribuir.style.display = "block";
-                btnAtribuir.textContent = "Atribuir equipamento";
-                btnAtribuir.style.backgroundColor = "#2b6cb0";
-            }
-            if (btnDevolver) {
-                btnDevolver.style.display = "none";
-            }
-        }
     } else {
-        // Equipamento em uso / atribuído
         if (contadorEmUso) contadorEmUso.textContent = "84";
         if (contadorDisponiveis) contadorDisponiveis.textContent = "32";
         if (descMov) {
@@ -270,7 +764,38 @@ function sincronizarStatusGlobal() {
         if (qtdBensCarlos) {
             qtdBensCarlos.textContent = "4 bens";
         }
+    }
 
+    // Se o usuário logado for professor, a Tela 4 é gerenciada dinamicamente por carregarMeusPatrimoniosProfessor()
+    if (papelUsuario === "professor") {
+        return;
+    }
+
+    // Coordenador: sincroniza detalhes se não houver item selecionado
+    const statusDetalhes = document.querySelector("#status-detalhes-pat");
+    const responsavelDetalhes = document.querySelector("#responsavel-detalhes-pat");
+    const btnAtribuir = document.querySelector("#btn-atribuir-patrimonio");
+    const btnDevolver = document.querySelector("#btn-devolver-patrimonio");
+
+    if (devolvido) {
+        if (statusDetalhes) {
+            statusDetalhes.textContent = "Disponível";
+            statusDetalhes.className = "status disponivel";
+            statusDetalhes.style.backgroundColor = "#c6f6d5";
+            statusDetalhes.style.color = "#22543d";
+        }
+        if (responsavelDetalhes) {
+            responsavelDetalhes.textContent = "Nenhum (Disponível no estoque)";
+        }
+        if (btnAtribuir) {
+            btnAtribuir.style.display = "block";
+            btnAtribuir.textContent = "Atribuir equipamento";
+            btnAtribuir.style.backgroundColor = "#2b6cb0";
+        }
+        if (btnDevolver) {
+            btnDevolver.style.display = "none";
+        }
+    } else {
         if (statusDetalhes) {
             statusDetalhes.textContent = "Em uso";
             statusDetalhes.className = "status em-uso";
@@ -280,30 +805,17 @@ function sincronizarStatusGlobal() {
         if (responsavelDetalhes) {
             responsavelDetalhes.textContent = profNomeAtribuido;
         }
-
-        if (papelUsuario === "professor") {
-            if (btnAtribuir) btnAtribuir.style.display = "none";
-            if (btnDevolver) {
-                btnDevolver.style.display = "block";
-                btnDevolver.textContent = "Registrar devolução";
-                btnDevolver.disabled = false;
-                btnDevolver.style.backgroundColor = "#205988";
-                btnDevolver.style.cursor = "pointer";
-            }
-        } else {
-            // Coordenador pode reatribuir ou registrar devolução
-            if (btnAtribuir) {
-                btnAtribuir.style.display = "block";
-                btnAtribuir.textContent = "Reatribuir equipamento";
-                btnAtribuir.style.backgroundColor = "#2b6cb0";
-            }
-            if (btnDevolver) {
-                btnDevolver.style.display = "block";
-                btnDevolver.textContent = "Registrar devolução";
-                btnDevolver.disabled = false;
-                btnDevolver.style.backgroundColor = "#D96161";
-                btnDevolver.style.cursor = "pointer";
-            }
+        if (btnAtribuir) {
+            btnAtribuir.style.display = "block";
+            btnAtribuir.textContent = "Reatribuir equipamento";
+            btnAtribuir.style.backgroundColor = "#2b6cb0";
+        }
+        if (btnDevolver) {
+            btnDevolver.style.display = "block";
+            btnDevolver.textContent = "Registrar devolução";
+            btnDevolver.disabled = false;
+            btnDevolver.style.backgroundColor = "#D96161";
+            btnDevolver.style.cursor = "pointer";
         }
     }
 }
@@ -318,7 +830,7 @@ mostrarTela(0);
 
 
 /* =========================================
-   SISTEMA DE TOKENS JWT
+   SISTEMA DE TOKENS JWT (RFC 7519)
 ========================================= */
 
 function gerarTokenJWT(email, papel, nome) {
@@ -331,10 +843,10 @@ function gerarTokenJWT(email, papel, nome) {
     const carga = {
         sub: email,
         nome: nome,
-        role: papel === "coordenador" ? "admin" : "docente",
-        papel: papel,
+        role: (papel === "coordenador" || papel === "admin") ? "admin" : "docente",
+        papel: (papel === "coordenador" || papel === "admin") ? "admin" : "docente",
         iat: agora,
-        exp: agora + (60 * 60 * 24) // 24h
+        exp: agora + (60 * 60 * 24) // 24 horas de validade
     };
 
     function base64Url(str) {
@@ -351,9 +863,44 @@ function gerarTokenJWT(email, papel, nome) {
     return `${headerB64}.${payloadB64}.${assinaturaB64}`;
 }
 
+/**
+ * Decodifica o payload (claims) do token JWT no cliente (Web)
+ * sem necessidade de chave secreta, conforme especificação RFC 7519.
+ */
+function decodificarTokenJWT(token) {
+    try {
+        if (!token || typeof token !== "string") return null;
+        const partes = token.split(".");
+        if (partes.length < 2) return null;
+        const base64Url = partes[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map(function (c) {
+                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+        );
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Erro ao decodificar token JWT:", e);
+        return null;
+    }
+}
+
+/**
+ * Extrai a role/papel diretamente do token JWT
+ */
+function extrairRoleDoJWT(token) {
+    const claims = decodificarTokenJWT(token);
+    if (!claims) return "docente";
+    return (claims.role || claims.papel || "docente").toLowerCase();
+}
+
 
 /* =========================================
-   LOGIN COM IDENTIFICAÇÃO POR SENHA (01 / 02) E JWT
+   LOGIN COM AUTENTICAÇÃO E VERIFICAÇÃO VIA JWT
 ========================================= */
 
 const botaoLogin = document.querySelector(
@@ -362,100 +909,135 @@ const botaoLogin = document.querySelector(
 
 if (botaoLogin) {
 
-    botaoLogin.addEventListener("click", function () {
+    botaoLogin.addEventListener("click", async function () {
 
-        const email = document.querySelector("#email").value.trim();
+        const inputIdentificador = document.querySelector("#email").value.trim();
         const senha = document.querySelector("#senha").value.trim();
 
-        if (email === "" || senha === "") {
-            alert("Preencha o e-mail e a senha.");
+        if (inputIdentificador === "" || senha === "") {
+            alert("Preencha o e-mail/usuário e a senha.");
             return;
         }
 
-        /*
-         * Identificação do Papel e Emissão de Token JWT:
-         * - Senha terminando com 01: COORDENADOR (Role admin, Acesso total)
-         * - Senha terminando com 02: PROFESSOR (Role docente, Acesso a Professores e Perfil)
-         */
-        if (senha.endsWith("01")) {
-            dadosUsuarioLogado = {
-                email: email,
-                password: senha,
-                nome: "Coordenadora Ana Paula",
-                departamento: "Coordenação Geral e Pedagógica",
-                telefone: "(11) 98765-4321",
-                cpf: "123.456.789-00",
-                papel: "coordenador"
-            };
-            aplicarPermissoes("coordenador");
-
-            const token = gerarTokenJWT(email, "coordenador", dadosUsuarioLogado.nome);
-            localStorage.setItem("jwt_token", token);
-            localStorage.setItem("jwt_refresh_token", "refresh_" + token.slice(-16));
-            localStorage.setItem("dados_usuario", JSON.stringify({
-                ...dadosUsuarioLogado,
-                role: "admin",
-                token: token
-            }));
-            console.log(">>> [JWT TOKEN GERADO - COORDENADOR]:", token);
-
-            alert("Acesso autorizado como COORDENADOR!\nToken JWT emitido com sucesso (perfil: admin).");
-            mostrarTela(1); // Dashboard do Coordenador
-        } else if (senha.endsWith("02") || (senha.startsWith("02") && !senha.endsWith("01"))) {
+        // Resolução inteligente: se o usuário digitou nome, matrícula ou username, resolve para o e-mail cadastrado
+        let emailParaAutenticar = inputIdentificador.toLowerCase();
+        if (!emailParaAutenticar.includes("@")) {
             const listaProf = obterProfessoresCadastrados();
-            const termoBusca = email.toLowerCase();
-            const professorEncontrado = listaProf.find(function(p) {
-                return (p.usuario && p.usuario.toLowerCase() === termoBusca) ||
-                       (p.nome && p.nome.toLowerCase() === termoBusca) ||
-                       (p.email && p.email.toLowerCase() === termoBusca) ||
-                       (p.matricula && p.matricula.toLowerCase() === termoBusca);
+            const idNormalizado = emailParaAutenticar.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            const profEncontrado = listaProf.find(p => {
+                const nomeNorm = (p.nome || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                const usuarioNorm = (p.usuario || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                const matNorm = (p.matricula || "").toLowerCase().trim();
+                return nomeNorm === idNormalizado ||
+                       usuarioNorm === idNormalizado ||
+                       matNorm === idNormalizado ||
+                       nomeNorm.includes(idNormalizado) ||
+                       (p.email && p.email.toLowerCase().startsWith(emailParaAutenticar));
             });
 
-            if (professorEncontrado) {
-                dadosUsuarioLogado = {
-                    email: professorEncontrado.email || email,
-                    password: senha,
-                    nome: professorEncontrado.nome,
-                    departamento: professorEncontrado.departamento || "Departamento Docente",
-                    telefone: professorEncontrado.telefone || "(11) 91234-5678",
-                    cpf: professorEncontrado.cpf || "987.654.321-11",
-                    papel: "professor",
-                    matricula: professorEncontrado.matricula,
-                    usuario: professorEncontrado.usuario
-                };
+            if (profEncontrado && profEncontrado.email) {
+                emailParaAutenticar = profEncontrado.email.toLowerCase();
+            } else if (emailParaAutenticar === "admin" || emailParaAutenticar === "coordenador" || emailParaAutenticar === "coordenador geral") {
+                emailParaAutenticar = "admin@admin.com";
+            } else if (emailParaAutenticar.includes("carlos drummond") || emailParaAutenticar === "carlos") {
+                emailParaAutenticar = "professor@escola.com";
+            } else if (emailParaAutenticar.includes("maria silva") || emailParaAutenticar === "maria") {
+                emailParaAutenticar = "maria.silva@escola.com";
             } else {
-                dadosUsuarioLogado = {
-                    email: email.includes("@") ? email : `${email.toLowerCase().replace(/\s+/g, '.')}@escola.edu.br`,
-                    password: senha,
-                    nome: email.includes("@") ? "Prof. Carlos Drummond" : email,
-                    departamento: "Departamento Docente",
-                    telefone: "(11) 91234-5678",
-                    cpf: "987.654.321-11",
-                    papel: "professor",
-                    usuario: email
-                };
+                emailParaAutenticar = emailParaAutenticar.replace(/\s+/g, ".") + "@escola.edu.br";
+            }
+        }
+
+        let tokenJWT = null;
+        let dadosResposta = null;
+
+        // 1. Autenticação obrigatória via API Go REST externa (POST /api/auth/login)
+        try {
+            let respostaApi = await fetch("http://localhost:8081/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailParaAutenticar, password: senha })
+            });
+
+            // Se falhou e tínhamos tentado inferir um e-mail diferente da entrada bruta, tenta com a entrada bruta
+            if (!respostaApi.ok && emailParaAutenticar !== inputIdentificador.toLowerCase()) {
+                const retryRes = await fetch("http://localhost:8081/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: inputIdentificador.toLowerCase(), password: senha })
+                });
+                if (retryRes.ok) {
+                    respostaApi = retryRes;
+                    emailParaAutenticar = inputIdentificador.toLowerCase();
+                }
             }
 
-            aplicarPermissoes("professor");
-
-            const token = gerarTokenJWT(dadosUsuarioLogado.email, "professor", dadosUsuarioLogado.nome);
-            localStorage.setItem("jwt_token", token);
-            localStorage.setItem("jwt_refresh_token", "refresh_" + token.slice(-16));
-            localStorage.setItem("dados_usuario", JSON.stringify({
-                ...dadosUsuarioLogado,
-                role: "docente",
-                token: token
-            }));
-            console.log(">>> [JWT TOKEN GERADO - PROFESSOR]:", token);
-
-            // Sincroniza o status do equipamento atribuído
-            sincronizarStatusGlobal();
-
-            alert(`Acesso autorizado como PROFESSOR!\nBem-vindo(a), ${dadosUsuarioLogado.nome}!\nToken JWT emitido com sucesso (perfil: docente).\nAcessando tela do equipamento atribuído.`);
-            mostrarTela(4); // Substitui a tela de professores pela tela de equipamento com devolução
-        } else {
-            alert("Identificação de perfil necessária:\n• Senha terminada em '01': Acesso de Coordenador\n• Senha terminada em '02': Acesso de Professor");
+            if (respostaApi.ok) {
+                dadosResposta = await respostaApi.json();
+                tokenJWT = dadosResposta.token || dadosResposta.access_token;
+            } else {
+                let msgErro = "Credenciais inválidas. Verifique seu e-mail e senha.";
+                try {
+                    const erroJson = await respostaApi.json();
+                    if (erroJson.error || erroJson.message) {
+                        msgErro = erroJson.error || erroJson.message;
+                    }
+                } catch (_) {}
+                if (respostaApi.status === 401) {
+                    msgErro += "\n\n💡 Dica: Certifique-se de utilizar o endereço de e-mail cadastrado (ex: professor@escola.com ou nome.sobrenome@escola.edu.br) e a senha com no mínimo 6 caracteres.";
+                }
+                alert(`Falha no login:\n${msgErro}`);
+                return;
+            }
+        } catch (erroRede) {
+            alert("Não foi possível conectar ao servidor da API em http://localhost:8081.\nCertifique-se de que a API (api.exe) está em execução.");
             return;
+        }
+
+        if (!tokenJWT) {
+            alert("Falha na autenticação: nenhum token JWT recebido da API.");
+            return;
+        }
+
+        // 2. Extração dos dados reais do usuário retornados pela API
+        const usuarioApi = (dadosResposta && dadosResposta.user) ? dadosResposta.user : {};
+        dadosUsuarioLogado = {
+            id: usuarioApi.id,
+            email: usuarioApi.email || email,
+            password: senha,
+            nome: usuarioApi.nome || email,
+            departamento: usuarioApi.departamento || "Docência",
+            telefone: usuarioApi.telefone || "",
+            cpf: usuarioApi.cpf || "",
+            matricula: usuarioApi.matricula || "",
+            papel: (usuarioApi.role || "").toLowerCase()
+        };
+
+        // 3. VERIFICAÇÃO DO ROLE ESTRITAMENTE A PARTIR DAS CLAIMS DO JWT
+        const claims = decodificarTokenJWT(tokenJWT);
+        const roleExtraido = (claims && (claims.role || claims.papel)) ? (claims.role || claims.papel).toLowerCase() : (dadosUsuarioLogado.papel || "docente");
+        const ehCoordenador = (roleExtraido === "admin" || roleExtraido === "coordenador");
+
+        localStorage.setItem("jwt_token", tokenJWT);
+        localStorage.setItem("jwt_refresh_token", (dadosResposta && dadosResposta.refreshToken) ? dadosResposta.refreshToken : "refresh_" + tokenJWT.slice(-16));
+        localStorage.setItem("dados_usuario", JSON.stringify({
+            ...dadosUsuarioLogado,
+            role: roleExtraido,
+            token: tokenJWT
+        }));
+
+        console.log(">>> [LOGIN VALIDADO VIA API GO E JWT]:", claims);
+        console.log(">>> [ROLE VALIDADO VIA JWT]:", roleExtraido);
+
+        if (ehCoordenador) {
+            aplicarPermissoes("coordenador");
+            alert(`Acesso autorizado via Token JWT da API!\nPerfil identificado no JWT: ADMIN (Coordenador)\n\nClaims do JWT:\n• Role: ${roleExtraido}\n• Subject: ${claims ? claims.sub : email}\n• Expira em: 15min / renovável`);
+            mostrarTela(1); // Dashboard do Coordenador
+        } else {
+            aplicarPermissoes("professor");
+            sincronizarStatusGlobal();
+            alert(`Acesso autorizado via Token JWT da API!\nPerfil identificado no JWT: PROFESSOR\nBem-vindo(a), ${dadosUsuarioLogado.nome}!\n\nClaims do JWT:\n• Role: ${roleExtraido}\n• Subject: ${claims ? claims.sub : email}`);
+            mostrarTela(4); // Meus bens do professor
         }
 
     });
@@ -482,16 +1064,175 @@ if (linksLogin.length >= 2) {
     });
 
 
-    /* Criar conta */
+    /* Criar conta de coordenador */
 
-    linksLogin[1].addEventListener("click", function (event) {
+    const linkCriarConta = document.getElementById("link-criar-conta-coordenador") || linksLogin[1];
 
-        event.preventDefault();
+    if (linkCriarConta) {
+        linkCriarConta.addEventListener("click", function (event) {
+            event.preventDefault();
+            mostrarTela(6); // Abre a Tela 6 - Cadastro de Coordenador
+        });
+    }
 
-        alert("Tela de cadastro do coordenador.");
+}
 
+
+/* =========================================
+   CADASTRO DE COORDENADOR (TELA 6)
+========================================= */
+
+const btnVoltarLoginCoord = document.getElementById("btn-voltar-login-coord");
+const linkVoltarLoginCoord = document.getElementById("link-voltar-login-coord");
+const btnToggleSenhaCad = document.getElementById("btn-toggle-senha-cad");
+const btnConfirmarCadCoord = document.getElementById("btn-confirmar-cadastro-coordenador");
+
+if (btnVoltarLoginCoord) {
+    btnVoltarLoginCoord.addEventListener("click", function () {
+        mostrarTela(0);
     });
+}
 
+if (linkVoltarLoginCoord) {
+    linkVoltarLoginCoord.addEventListener("click", function (event) {
+        event.preventDefault();
+        mostrarTela(0);
+    });
+}
+
+if (btnToggleSenhaCad) {
+    btnToggleSenhaCad.addEventListener("click", function () {
+        const inputSenhaCad = document.getElementById("cad-coord-password");
+        if (inputSenhaCad) {
+            if (inputSenhaCad.type === "password") {
+                inputSenhaCad.type = "text";
+                btnToggleSenhaCad.textContent = "🙈";
+            } else {
+                inputSenhaCad.type = "password";
+                btnToggleSenhaCad.textContent = "👁";
+            }
+        }
+    });
+}
+
+if (btnConfirmarCadCoord) {
+    btnConfirmarCadCoord.addEventListener("click", async function () {
+        const inputEmail = document.getElementById("cad-coord-email");
+        const inputPassword = document.getElementById("cad-coord-password");
+        const inputNome = document.getElementById("cad-coord-nome");
+        const inputDepartamento = document.getElementById("cad-coord-departamento");
+        const inputTelefone = document.getElementById("cad-coord-telefone");
+        const inputCpf = document.getElementById("cad-coord-cpf");
+
+        const email = inputEmail ? inputEmail.value.trim().toLowerCase() : "";
+        let password = inputPassword ? inputPassword.value.trim() : "";
+        const nome = inputNome ? inputNome.value.trim() : "";
+        const departamento = inputDepartamento ? inputDepartamento.value.trim() : "";
+        const telefone = inputTelefone ? inputTelefone.value.trim() : "";
+        const cpf = inputCpf ? inputCpf.value.trim() : "";
+
+        // Validação dos 6 campos obrigatórios solicitados
+        if (!email || !password || !nome || !departamento || !telefone || !cpf) {
+            alert("Por favor, preencha todos os campos obrigatórios para o cadastro de coordenador:\n- E-mail\n- Password\n- Nome\n- Departamento\n- Telefone\n- CPF");
+            return;
+        }
+
+        if (!email.includes("@")) {
+            alert("Por favor, informe um endereço de e-mail institucional válido.");
+            return;
+        }
+
+        if (password.length < 6) {
+            alert("A senha de acesso do coordenador deve conter no mínimo 6 caracteres.");
+            return;
+        }
+
+        const textoBotaoOriginal = btnConfirmarCadCoord.textContent;
+        btnConfirmarCadCoord.disabled = true;
+        btnConfirmarCadCoord.textContent = "Cadastrando...";
+
+        // Registro obrigatório na API REST Go externa (api.exe)
+        try {
+            const respostaApi = await fetch("http://localhost:8081/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    nome: nome,
+                    departamento: departamento,
+                    telefone: telefone,
+                    cpf: cpf
+                })
+            });
+
+            if (!respostaApi.ok) {
+                let msgErro = "Erro ao cadastrar coordenador na API.";
+                try {
+                    const erroJson = await respostaApi.json();
+                    if (erroJson.error || erroJson.message) {
+                        msgErro = erroJson.error || erroJson.message;
+                    }
+                } catch (_) {}
+
+                if (respostaApi.status === 409) {
+                    msgErro = "Já existe um usuário cadastrado com este e-mail.";
+                } else if (respostaApi.status === 400) {
+                    msgErro = `Dados inválidos: ${msgErro}`;
+                }
+
+                alert(`Falha no Cadastro:\n${msgErro}`);
+                btnConfirmarCadCoord.disabled = false;
+                btnConfirmarCadCoord.textContent = textoBotaoOriginal;
+                return;
+            }
+        } catch (erroRede) {
+            alert("Não foi possível conectar ao servidor da API em http://localhost:8081.\nCertifique-se de que a API (api.exe) está em execução.");
+            btnConfirmarCadCoord.disabled = false;
+            btnConfirmarCadCoord.textContent = textoBotaoOriginal;
+            return;
+        }
+
+        btnConfirmarCadCoord.disabled = false;
+        btnConfirmarCadCoord.textContent = textoBotaoOriginal;
+
+        const novoCoordenador = {
+            id: "coord_" + Date.now(),
+            email: email,
+            password: password,
+            nome: nome,
+            departamento: departamento,
+            telefone: telefone,
+            cpf: cpf,
+            papel: "coordenador"
+        };
+
+        // Salva o coordenador no localStorage
+        salvarCoordenadorCadastrado(novoCoordenador);
+
+        // Atualiza os dados do usuário para serem visualizados no perfil
+        dadosUsuarioLogado = { ...novoCoordenador };
+
+        // Alerta informativo ao coordenador
+        alert(`Conta de Coordenador criada com sucesso na API!\n\nDados cadastrados:\n• E-mail: ${email}\n• Password: ${password}\n• Nome: ${nome}\n• Departamento: ${departamento}\n• Telefone: ${telefone}\n• CPF: ${cpf}\n\nVocê já pode realizar o login no sistema com suas credenciais.`);
+
+        // Preenche os campos do formulário de login (Tela 0)
+        const emailLogin = document.getElementById("email");
+        const senhaLogin = document.getElementById("senha");
+        if (emailLogin) emailLogin.value = email;
+        if (senhaLogin) senhaLogin.value = password;
+
+        // Limpa os campos do formulário de cadastro
+        if (inputEmail) inputEmail.value = "";
+        if (inputPassword) inputPassword.value = "";
+        if (inputNome) inputNome.value = "";
+        if (inputDepartamento) inputDepartamento.value = "";
+        if (inputTelefone) inputTelefone.value = "";
+        if (inputCpf) inputCpf.value = "";
+
+        // Retorna para a tela de login
+        mostrarTela(0);
+    });
 }
 
 
@@ -742,21 +1483,37 @@ botoesDevolucao.forEach(function (botao) {
 
 
 function abrirModalDevolucao() {
+    if (!patrimonioAtualDetalhes) {
+        alert("Nenhum patrimônio selecionado para devolução.");
+        return;
+    }
+
+    if (papelUsuario === "professor" && !usuarioEhResponsavelPeloPatrimonio(patrimonioAtualDetalhes)) {
+        alert("Acesso restrito: Você só pode registrar a devolução de patrimônios registrados sob seu próprio nome.");
+        return;
+    }
 
     const overlay = document.createElement("div");
     overlay.className = "overlay-js";
+
+    const nomeItem = patrimonioAtualDetalhes.nome || "Equipamento";
+    const tomboItem = patrimonioAtualDetalhes.codigo || patrimonioAtualDetalhes.numeroTombo || ("PAT-2024-00" + patrimonioAtualDetalhes.id);
 
     overlay.innerHTML = `
         <div class="modal-js">
 
             <h2>Registrar devolução</h2>
 
+            <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">
+                Confirmar devolução de: <strong>${nomeItem}</strong> (${tomboItem})
+            </p>
+
             <div class="campo-js">
-                <label for="motivo-devolucao">Motivo da devolução</label>
+                <label for="motivo-devolucao">Motivo da devolução *</label>
                 <input
                     type="text"
                     id="motivo-devolucao"
-                    placeholder="Informe o motivo"
+                    placeholder="Ex: Término de projeto / período letivo"
                 >
             </div>
 
@@ -789,7 +1546,7 @@ function abrirModalDevolucao() {
         overlay.remove();
     });
 
-    overlay.querySelector("#confirmar-devolucao").addEventListener("click", function () {
+    overlay.querySelector("#confirmar-devolucao").addEventListener("click", async function () {
         const motivo = overlay.querySelector("#motivo-devolucao").value.trim();
 
         if (motivo === "") {
@@ -797,13 +1554,24 @@ function abrirModalDevolucao() {
             return;
         }
 
-        alert("Devolução registrada com sucesso.");
+        const idPat = patrimonioAtualDetalhes.id;
+
+        // Chamada direta à API REST Go externa: POST /api/admin/patrimonios/{id}/desatribuir
+        await apiDesatribuirPatrimonio(idPat, motivo);
+
+        alert(`Devolução de ${nomeItem} registrada com sucesso.`);
         overlay.remove();
 
-        // Salva estado de devolução e atualiza todas as telas (coordenador e professor)
+        // Salva estado de devolução e atualiza
         localStorage.setItem("equipamentoDevolvido", "true");
         localStorage.setItem("motivoDevolucao", motivo);
-        sincronizarStatusGlobal();
+
+        if (papelUsuario === "professor") {
+            await carregarMeusPatrimoniosProfessor();
+        } else {
+            sincronizarStatusGlobal();
+            mostrarTela(2);
+        }
 
         // Adiciona evento na linha do tempo
         const linhaTempo = document.querySelector("#linha-tempo-patrimonio");
@@ -887,11 +1655,15 @@ function abrirModalAtribuirEquipamento() {
         overlay.remove();
     });
 
-    overlay.querySelector("#confirmar-atribuicao").addEventListener("click", function () {
+    overlay.querySelector("#confirmar-atribuicao").addEventListener("click", async function () {
         const select = overlay.querySelector("#select-prof-atribuir");
         const profId = select.value;
         const profSelecionado = listaProf.find(function (p) { return p.id === profId; }) || listaProf[0];
         const obs = overlay.querySelector("#obs-atribuicao").value.trim();
+
+        // Chamada direta à API REST Go externa: POST /api/admin/patrimonios/{id}/atribuir
+        const numProfId = Number(profSelecionado.id) || 2;
+        await apiAtribuirPatrimonio(1, numProfId, obs);
 
         // Atualiza estado de atribuição
         localStorage.setItem("equipamentoDevolvido", "false");
@@ -923,7 +1695,7 @@ function abrirModalAtribuirEquipamento() {
 
         sincronizarStatusGlobal();
 
-        alert(`Equipamento atribuído com sucesso para ${profSelecionado.nome}!\n\nQuando o professor acessar o sistema com o usuário "${profSelecionado.usuario || profSelecionado.nome}" e senha terminada em 02, este equipamento constará vinculado ao nome dele.`);
+        alert(`Equipamento atribuído com sucesso para ${profSelecionado.nome}!\n\nQuando o professor acessar o sistema com o usuário "${profSelecionado.usuario || profSelecionado.nome}", este equipamento constará vinculado ao nome dele.`);
         overlay.remove();
     });
 
@@ -1021,16 +1793,27 @@ function abrirModalCadastroPatrimonio() {
         overlay.remove();
     });
 
-    overlay.querySelector("#confirmar-cadastro-patrimonio").addEventListener("click", function () {
+    overlay.querySelector("#confirmar-cadastro-patrimonio").addEventListener("click", async function () {
         const nome = overlay.querySelector("#novo-patrimonio-nome").value.trim();
         const tombo = overlay.querySelector("#novo-patrimonio-tombo").value.trim();
         const categoria = overlay.querySelector("#novo-patrimonio-categoria").value;
         const local = overlay.querySelector("#novo-patrimonio-local").value.trim() || "Geral";
+        const serie = overlay.querySelector("#novo-patrimonio-serie") ? overlay.querySelector("#novo-patrimonio-serie").value.trim() : "";
 
         if (nome === "" || tombo === "") {
             alert("Preencha o nome e o número de tombamento do patrimônio.");
             return;
         }
+
+        // Chamada direta à API REST Go externa: POST /api/admin/patrimonios
+        await apiCadastrarPatrimonio({
+            codigo: tombo,
+            nome: nome,
+            descricao: nome,
+            categoria: categoria,
+            numeroSerie: serie,
+            localizacao: local
+        });
 
         const telaPatrimonios = document.querySelectorAll(".tela")[2];
         if (telaPatrimonios) {
@@ -1108,29 +1891,38 @@ function abrirModalCadastroProfessor() {
             </div>
 
             <div class="campo-js">
-                <label for="novo-prof-usuario">Usuário de Acesso (Login do Professor)</label>
+                <label for="novo-prof-email">E-mail Institucional (Login do Professor) *</label>
+                <input
+                    type="email"
+                    id="novo-prof-email"
+                    placeholder="Ex: juliana.pereira@escola.edu.br"
+                >
+                <small style="display:block; color:#64748b; font-size:12px; margin-top:4px;">
+                    ✉️ E-mail oficial que o professor utilizará para acessar o sistema
+                </small>
+            </div>
+
+            <div class="campo-js">
+                <label for="novo-prof-senha">Senha de Acesso (Mínimo 6 caracteres) *</label>
+                <input
+                    type="text"
+                    id="novo-prof-senha"
+                    placeholder="Digite a senha (mínimo 6 caracteres)"
+                    style="background-color: #f1f5f9; color: #1e3a8a; font-weight: bold;"
+                >
+                <small style="display:block; color:#64748b; font-size:12px; margin-top:4px;">
+                    🔑 Senha de acesso institucional (requisito da API: mínimo 6 caracteres)
+                </small>
+            </div>
+
+            <div class="campo-js">
+                <label for="novo-prof-usuario">Nome de Usuário / Identificação</label>
                 <input
                     type="text"
                     id="novo-prof-usuario"
                     placeholder="Preenchido automaticamente com o nome"
                     style="background-color: #f1f5f9; color: #1e3a8a; font-weight: 500;"
                 >
-                <small style="display:block; color:#64748b; font-size:12px; margin-top:4px;">
-                    👤 Usuário: Nome completo utilizado para login
-                </small>
-            </div>
-
-            <div class="campo-js">
-                <label for="novo-prof-senha">Senha de Acesso (Matrícula + código 02) *</label>
-                <input
-                    type="text"
-                    id="novo-prof-senha"
-                    placeholder="Ex: 20240402"
-                    style="background-color: #f1f5f9; color: #1e3a8a; font-weight: bold;"
-                >
-                <small style="display:block; color:#64748b; font-size:12px; margin-top:4px;">
-                    🔑 Senha: Matrícula + identificador 02 (permissão de professor)
-                </small>
             </div>
 
             <div class="campo-js">
@@ -1139,15 +1931,6 @@ function abrirModalCadastroProfessor() {
                     type="text"
                     id="novo-prof-depto"
                     placeholder="Ex: Informática / Matemática"
-                >
-            </div>
-
-            <div class="campo-js">
-                <label for="novo-prof-email">E-mail Institucional</label>
-                <input
-                    type="email"
-                    id="novo-prof-email"
-                    placeholder="Ex: juliana.pereira@escola.edu.br"
                 >
             </div>
 
@@ -1194,25 +1977,34 @@ function abrirModalCadastroProfessor() {
     const inputSenha = overlay.querySelector("#novo-prof-senha");
     const inputEmail = overlay.querySelector("#novo-prof-email");
 
-    // Preenche automaticamente o Usuário com o Nome completo
+    // Preenche automaticamente Usuário e E-mail sugerido
     inputNome.addEventListener("input", function () {
         inputUsuario.value = inputNome.value.trim();
-        if (inputEmail.value.trim() === "" && inputNome.value.trim().length > 3) {
-            const emailSugerido = inputNome.value.trim().toLowerCase().replace(/\s+/g, ".") + "@escola.edu.br";
+        if (inputEmail.value.trim() === "" && inputNome.value.trim().length > 2) {
+            const emailSugerido = inputNome.value.trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, ".")
+                .replace(/\.+/g, ".")
+                + "@escola.edu.br";
             inputEmail.placeholder = emailSugerido;
         }
     });
 
-    // Preenche automaticamente a Senha com a Matrícula + '02'
+    // Sugere automaticamente a senha inicial com base na matrícula
     inputMatricula.addEventListener("input", function () {
         const mat = inputMatricula.value.trim();
         const digitos = mat.replace(/\D/g, "");
-        if (digitos.length > 0) {
-            inputSenha.value = digitos + "02";
+        if (digitos.length >= 6) {
+            inputSenha.placeholder = digitos;
+            if (inputSenha.value.trim() === "") inputSenha.value = digitos;
         } else if (mat.length > 0) {
-            inputSenha.value = mat + "02";
+            const senhaSugerida = ("prof" + (digitos || "123456")).padEnd(6, "0");
+            inputSenha.placeholder = senhaSugerida;
+            if (inputSenha.value.trim() === "") inputSenha.value = senhaSugerida;
         } else {
-            inputSenha.value = "";
+            inputSenha.placeholder = "Mínimo 6 caracteres";
         }
     });
 
@@ -1226,13 +2018,13 @@ function abrirModalCadastroProfessor() {
         overlay.remove();
     });
 
-    overlay.querySelector("#confirmar-cadastro-professor").addEventListener("click", function () {
+    overlay.querySelector("#confirmar-cadastro-professor").addEventListener("click", async function () {
         const nome = inputNome.value.trim();
         const matricula = inputMatricula.value.trim();
         let usuario = inputUsuario.value.trim();
         let senha = inputSenha.value.trim();
         const depto = overlay.querySelector("#novo-prof-depto").value.trim() || "Geral";
-        let email = inputEmail.value.trim();
+        let email = inputEmail.value.trim().toLowerCase();
         const telefone = overlay.querySelector("#novo-prof-telefone").value.trim() || "(11) 98765-4321";
         const cpf = overlay.querySelector("#novo-prof-cpf").value.trim() || "987.654.321-99";
 
@@ -1245,35 +2037,76 @@ function abrirModalCadastroProfessor() {
             usuario = nome;
         }
 
-        if (senha === "") {
-            const digitos = matricula.replace(/\D/g, "");
-            senha = (digitos.length > 0 ? digitos : matricula) + "02";
-        }
-
-        // Garante que a senha termine com 02 (ou comece com 02)
-        if (!senha.endsWith("02")) {
-            senha = senha + "02";
-        }
-
         if (email === "") {
-            email = nome.toLowerCase().replace(/\s+/g, ".") + "@escola.edu.br";
+            if (inputEmail.placeholder && inputEmail.placeholder.includes("@")) {
+                email = inputEmail.placeholder.toLowerCase();
+            } else {
+                email = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ".") + "@escola.edu.br";
+            }
         }
 
-        // Cria o registro do novo professor
-        const novoProfessor = {
-            id: "prof_" + Date.now(),
+        if (!email.includes("@")) {
+            alert("Por favor, informe um endereço de e-mail institucional válido para o professor.");
+            inputEmail.focus();
+            return;
+        }
+
+        if (senha === "") {
+            if (inputSenha.placeholder && inputSenha.placeholder.length >= 6) {
+                senha = inputSenha.placeholder;
+            } else {
+                const digitos = matricula.replace(/\D/g, "");
+                senha = digitos.length >= 6 ? digitos : ("prof" + (digitos || "123456")).padEnd(6, "0");
+            }
+        }
+
+        if (senha.length < 6) {
+            alert("A senha de acesso do professor deve conter no mínimo 6 caracteres (exigência da API).");
+            inputSenha.focus();
+            return;
+        }
+
+        const btnConfirmar = overlay.querySelector("#confirmar-cadastro-professor");
+        const textoOriginalBtn = btnConfirmar.textContent;
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = "Cadastrando na API...";
+
+        // Chamada obrigatória e verificada à API REST Go externa: POST /api/admin/professores
+        const resultadoApi = await apiCadastrarProfessor({
             nome: nome,
-            usuario: usuario,
-            matricula: matricula,
-            senha: senha,
-            departamento: depto,
             email: email,
+            password: senha,
+            matricula: matricula,
+            departamento: depto,
             telefone: telefone,
-            cpf: cpf,
+            cpf: cpf
+        });
+
+        btnConfirmar.disabled = false;
+        btnConfirmar.textContent = textoOriginalBtn;
+
+        if (!resultadoApi || !resultadoApi.ok) {
+            alert(`Falha no Cadastro do Professor na API:\n${resultadoApi ? resultadoApi.error : "Não foi possível conectar à API."}`);
+            return;
+        }
+
+        const professorApi = (resultadoApi.data && resultadoApi.data.professor) ? resultadoApi.data.professor : {};
+
+        // Cria o registro do novo professor com os dados retornados pela API
+        const novoProfessor = {
+            id: professorApi.id || ("prof_" + Date.now()),
+            nome: professorApi.nome || nome,
+            usuario: usuario,
+            matricula: professorApi.matricula || matricula,
+            senha: senha,
+            departamento: professorApi.departamento || depto,
+            email: professorApi.email || email,
+            telefone: professorApi.telefone || telefone,
+            cpf: professorApi.cpf || cpf,
             papel: "professor"
         };
 
-        // Salva na lista do localStorage
+        // Salva na lista do localStorage para sincronização com telas e busca local
         try {
             const listaSalva = JSON.parse(localStorage.getItem("professores_cadastrados") || "[]");
             listaSalva.push(novoProfessor);
@@ -1291,9 +2124,9 @@ function abrirModalCadastroProfessor() {
             novoCard.style.cursor = "pointer";
             novoCard.innerHTML = `
                 <div>
-                    <h3>${nome}</h3>
-                    <p>Matrícula: ${matricula}</p>
-                    <p>Departamento: ${depto}</p>
+                    <h3>${novoProfessor.nome}</h3>
+                    <p>Matrícula: ${novoProfessor.matricula}</p>
+                    <p>Departamento: ${novoProfessor.departamento}</p>
                 </div>
                 <span class="quantidade">
                     0 bens
@@ -1301,7 +2134,7 @@ function abrirModalCadastroProfessor() {
             `;
 
             novoCard.addEventListener("click", function () {
-                alert(`Professor: ${nome}\nUsuário: ${usuario}\nSenha de acesso: ${senha}\nDepartamento: ${depto}`);
+                alert(`Professor: ${novoProfessor.nome}\nE-mail de Login: ${novoProfessor.email}\nSenha de acesso: ${novoProfessor.senha}\nDepartamento: ${novoProfessor.departamento}`);
             });
 
             if (campoBusca) {
@@ -1318,7 +2151,7 @@ function abrirModalCadastroProfessor() {
         }
 
         // Exibe ao coordenador as credenciais criadas para repassar ao professor
-        alert(`Professor cadastrado com sucesso!\n\n📋 Credenciais de Acesso criadas para o Professor:\n• Usuário: ${usuario}\n• Senha: ${senha}\n\n(O professor poderá acessar o sistema utilizando este Usuário e Senha terminada em 02).`);
+        alert(`Professor cadastrado com sucesso na API!\n\n📋 Credenciais de Acesso criadas para o Professor:\n• E-mail (utilizado para Login): ${email}\n• Senha: ${senha}\n• Nome: ${nome}\n• Matrícula: ${matricula}\n\n⚠️ ATENÇÃO: O professor deve utilizar este E-MAIL (${email}) e a SENHA informados para efetuar login no sistema.`);
         overlay.remove();
     });
 

@@ -34,43 +34,37 @@ class MeusPatrimoniosControlador extends GetxController {
     carregarMeusPatrimonios();
   }
 
-  List<PatrimonioModelo> _obterItensDemonstracao() {
-    final nomeDocente = usuarioLogado.value?.nome ?? 'Prof. Carlos Drummond';
-    return [
-      PatrimonioModelo(
-        id: 1,
-        nome: 'Notebook Dell Latitude 3420',
-        numeroTombo: 'PAT-2024-001',
-        categoria: 'Informática',
-        status: 'em_uso',
-        localizacao: 'Laboratório de Informática 01',
-        numeroSerie: 'DL8829102',
-        descricao: 'Equipamento em excelente estado de conservação.',
-        professorResponsavelNome: nomeDocente,
-        dataCriacao: DateTime(2024, 1, 15),
-      ),
-      PatrimonioModelo(
-        id: 2,
-        nome: 'Projetor Epson PowerLite',
-        numeroTombo: 'PAT-2024-002',
-        categoria: 'Audiovisual',
-        status: 'em_uso',
-        localizacao: 'Sala dos Professores',
-        numeroSerie: 'EP9921344',
-        descricao: 'Projetor portátil para apresentações pedagógicas.',
-        professorResponsavelNome: nomeDocente,
-        dataCriacao: DateTime(2024, 2, 10),
-      ),
-    ];
+  bool usuarioEhResponsavel(PatrimonioModelo item) {
+    final usuario = usuarioLogado.value;
+    if (usuario == null) return false;
+
+    // Se for administrador ou coordenador, possui acesso amplo
+    if (usuario.ehAdministrador) return true;
+
+    // 1. Verificação por ID do docente responsável
+    if (item.professorResponsavelId != null) {
+      if (usuario.professorId != null && item.professorResponsavelId == usuario.professorId) {
+        return true;
+      }
+      if (usuario.id != 0 && item.professorResponsavelId == usuario.id) {
+        return true;
+      }
+    }
+
+    // 2. Verificação por Nome do docente responsável
+    if (item.professorResponsavelNome != null && item.professorResponsavelNome!.isNotEmpty && usuario.nome.isNotEmpty) {
+      final nomeItem = item.professorResponsavelNome!.toLowerCase().trim();
+      final nomeDocente = usuario.nome.toLowerCase().trim();
+      if (nomeItem == nomeDocente || nomeItem.contains(nomeDocente) || nomeDocente.contains(nomeItem)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   void sincronizarNovoItemAtribuido(PatrimonioModelo item) {
-    final usuario = usuarioLogado.value;
-    final ehMeu = (item.professorResponsavelId != null && usuario?.professorId == item.professorResponsavelId) ||
-                  (item.professorResponsavelNome != null && usuario?.nome != null && item.professorResponsavelNome!.toLowerCase().contains(usuario!.nome.toLowerCase())) ||
-                  (usuario?.nome != null && usuario!.nome.toLowerCase().contains(item.professorResponsavelNome?.toLowerCase() ?? ''));
-
-    if (ehMeu) {
+    if (usuarioEhResponsavel(item)) {
       final index = listaMeusPatrimonios.indexWhere((p) => p.id == item.id);
       if (index != -1) {
         listaMeusPatrimonios[index] = item;
@@ -90,31 +84,28 @@ class MeusPatrimoniosControlador extends GetxController {
         return;
       }
 
-      Response resposta;
-      if (usuario.professorId != null) {
+      Response resposta = await _patrimonioServico.listarPatrimonios();
+      if (!resposta.isOk && usuario.professorId != null) {
         resposta = await _professorServico.obterPatrimoniosDoProfessor(usuario.professorId!);
-      } else {
-        resposta = await _patrimonioServico.listarPatrimonios(status: 'alocado');
       }
 
       if (resposta.isOk && resposta.body != null) {
-        final List dados = resposta.body is List ? resposta.body : (resposta.body['data'] ?? []);
+        final List dados = resposta.body is List
+            ? resposta.body
+            : (resposta.body['items'] ?? resposta.body['patrimonios'] ?? resposta.body['data'] ?? []);
         final patrimonios = dados
             .map((e) => PatrimonioModelo.fromJson(Map<String, dynamic>.from(e as Map)))
+            .where((p) => usuarioEhResponsavel(p))
             .toList();
 
-        if (patrimonios.isNotEmpty) {
-          listaMeusPatrimonios.assignAll(patrimonios);
-        } else {
-          listaMeusPatrimonios.assignAll(_obterItensDemonstracao());
-        }
+        listaMeusPatrimonios.assignAll(patrimonios);
         aplicarFiltros();
       } else {
-        listaMeusPatrimonios.assignAll(_obterItensDemonstracao());
+        listaMeusPatrimonios.clear();
         aplicarFiltros();
       }
-    } catch (e) {
-      listaMeusPatrimonios.assignAll(_obterItensDemonstracao());
+    } catch (_) {
+      listaMeusPatrimonios.clear();
       aplicarFiltros();
     } finally {
       carregando.value = false;
@@ -122,12 +113,27 @@ class MeusPatrimoniosControlador extends GetxController {
   }
 
   Future<void> devolverEquipamento(PatrimonioModelo item, String? observacoes) async {
+    if (!usuarioEhResponsavel(item)) {
+      Get.snackbar(
+        'Acesso Negado',
+        'Você só pode realizar a devolução de patrimônios registrados sob seu próprio nome.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade700,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     carregando.value = true;
     try {
-      await _patrimonioServico.devolverPatrimonio(
+      final res = await _patrimonioServico.devolverPatrimonio(
         patrimonioId: item.id,
         observacoes: observacoes,
       );
+
+      if (!res.isOk) {
+        throw Exception(_api.tratarErro(res));
+      }
 
       listaMeusPatrimonios.removeWhere((p) => p.id == item.id);
       aplicarFiltros();
@@ -141,17 +147,12 @@ class MeusPatrimoniosControlador extends GetxController {
         backgroundColor: Colors.green.shade600,
         colorText: Colors.white,
       );
-    } catch (_) {
-      listaMeusPatrimonios.removeWhere((p) => p.id == item.id);
-      aplicarFiltros();
-      _sincronizarStatusComCoordenador(item, observacoes);
-
-      Get.back();
+    } catch (e) {
       Get.snackbar(
-        'Devolução Registrada',
-        'O equipamento ${item.nome} foi devolvido com sucesso.',
+        'Falha na Devolução',
+        'Não foi possível registrar a devolução: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade600,
+        backgroundColor: Colors.red.shade700,
         colorText: Colors.white,
       );
     } finally {

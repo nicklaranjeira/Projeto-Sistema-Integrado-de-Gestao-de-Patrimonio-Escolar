@@ -58,11 +58,32 @@ class PatrimonioModelo {
   bool get eEmManutencao => emManutencao;
 
   factory PatrimonioModelo.fromJson(Map<String, dynamic> json) {
+    int? parseId(dynamic val) {
+      if (val is int) return val;
+      if (val == null) return null;
+      return int.tryParse(val.toString());
+    }
+
+    DateTime? parseDate(dynamic val) {
+      if (val == null) return null;
+      return DateTime.tryParse(val.toString());
+    }
+
+    final rawProfId = json['professor_responsavel_id'] ??
+        json['professor_id'] ??
+        json['professorId'] ??
+        json['responsavelId'];
+
+    final rawProfNome = json['professor_responsavel_nome'] ??
+        json['professor_nome'] ??
+        json['professorNome'] ??
+        json['responsavelNome'];
+
     return PatrimonioModelo(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      id: parseId(json['id']) ?? 0,
       nome: json['nome'] ?? json['descricao'] ?? '',
-      numeroTombo: json['numero_tombo'] ?? json['tombamento'] ?? '',
-      numeroSerie: json['numero_serie'],
+      numeroTombo: json['numero_tombo'] ?? json['tombamento'] ?? json['codigo'] ?? '',
+      numeroSerie: json['numero_serie'] ?? json['numeroSerie'],
       categoria: json['categoria'],
       marca: json['marca'],
       modelo: json['modelo'],
@@ -70,13 +91,11 @@ class PatrimonioModelo {
       descricao: json['descricao'],
       observacoes: json['observacoes'],
       status: json['status'] ?? 'disponivel',
-      professorResponsavelId: json['professor_responsavel_id'] is int
-          ? json['professor_responsavel_id']
-          : int.tryParse(json['professor_responsavel_id']?.toString() ?? ''),
-      professorResponsavelNome: json['professor_responsavel_nome'] ?? json['professor_nome'],
-      dataCriacao: json['criado_em'] != null ? DateTime.tryParse(json['criado_em']) : null,
-      dataAtualizacao: json['atualizado_em'] != null ? DateTime.tryParse(json['atualizado_em']) : null,
-      dataAtribuicao: json['data_atribuicao'] != null ? DateTime.tryParse(json['data_atribuicao']) : null,
+      professorResponsavelId: parseId(rawProfId),
+      professorResponsavelNome: rawProfNome,
+      dataCriacao: parseDate(json['criado_em'] ?? json['createdAt']),
+      dataAtualizacao: parseDate(json['atualizado_em'] ?? json['updatedAt']),
+      dataAtribuicao: parseDate(json['data_atribuicao'] ?? json['dataAtribuicao']),
     );
   }
 

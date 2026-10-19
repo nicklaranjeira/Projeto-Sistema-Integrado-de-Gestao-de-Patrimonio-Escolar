@@ -190,6 +190,9 @@ class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
 
   /// Exibe modal com os detalhes do equipamento e permite registrar a devolução.
   void _exibirDetalhesInformativos(BuildContext context, PatrimonioModelo item) {
+    final ehResponsavel = controller.usuarioEhResponsavel(item);
+    final podeDevolver = ehResponsavel && item.estaAlocado;
+
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(24),
@@ -238,18 +241,42 @@ class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
               if (item.descricao != null && item.descricao!.isNotEmpty)
                 _LinhaDetalheDocente(rotulo: 'Observações de Conservação', valor: item.descricao!),
 
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () => _confirmarDevolucao(context, item),
-                icon: const Icon(Icons.assignment_return_rounded),
-                label: const Text('Registrar Devolução'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF205988),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  minimumSize: const Size.fromHeight(48),
+              if (podeDevolver) ...[
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () => _confirmarDevolucao(context, item),
+                  icon: const Icon(Icons.assignment_return_rounded),
+                  label: const Text('Registrar Devolução'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF205988),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
-              ),
+              ] else if (!ehResponsavel) ...[
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock_outline_rounded, color: Colors.amber.shade800, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Apenas o titular responsável (${item.professorResponsavelNome ?? "Docente responsável"}) pode registrar a devolução deste equipamento.',
+                          style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               OutlinedButton(
                 onPressed: () => Get.back(),
@@ -268,6 +295,17 @@ class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
   }
 
   void _confirmarDevolucao(BuildContext context, PatrimonioModelo item) {
+    if (!controller.usuarioEhResponsavel(item)) {
+      Get.snackbar(
+        'Acesso Restrito',
+        'Você só pode registrar a devolução de patrimônios registrados sob seu próprio nome.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade700,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     final motivoController = TextEditingController();
 
     Get.dialog(

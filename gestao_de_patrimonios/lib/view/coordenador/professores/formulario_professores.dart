@@ -106,7 +106,7 @@ class FormularioProfessorView extends GetView<ProfessorControlador> {
                       // E-mail Institucional
                       CampoTextoPersonalizado(
                         controlador: controller.emailController,
-                        rotulo: 'E-mail Institucional *',
+                        rotulo: 'E-mail Institucional (Login do Professor) *',
                         dica: 'carlos.mendes@escola.edu.br',
                         iconePrefixo: Icons.email_outlined,
                         tipoTeclado: TextInputType.emailAddress,
@@ -162,20 +162,20 @@ class FormularioProfessorView extends GetView<ProfessorControlador> {
                             const SizedBox(height: 10),
                             CampoTextoPersonalizado(
                               controlador: controller.usuarioAcessoController,
-                              rotulo: 'Usuário (Nome completo para login)',
+                              rotulo: 'Nome de Usuário / Identificação',
                               dica: 'Gerado automaticamente pelo nome',
                               iconePrefixo: Icons.account_circle_outlined,
                             ),
                             const SizedBox(height: 10),
                             CampoTextoPersonalizado(
                               controlador: controller.senhaAcessoController,
-                              rotulo: 'Senha (Matrícula + 02)',
-                              dica: 'Ex: 20264402',
+                              rotulo: 'Senha de Acesso Inicial (Mínimo 6 caracteres) *',
+                              dica: 'Digite a senha do professor (mínimo 6 caracteres)',
                               iconePrefixo: Icons.lock_outline_rounded,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '• Usuário: Nome completo | Senha: Número da matrícula + 02 (identificador de professor)',
+                              '• Login no sistema: utilize o E-MAIL institucional e a SENHA (mínimo 6 caracteres)',
                               style: TextStyle(fontSize: 11, color: Colors.blueGrey.shade700),
                             ),
                           ],

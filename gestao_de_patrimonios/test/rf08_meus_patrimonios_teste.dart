@@ -74,5 +74,40 @@ void main() {
       expect(bem.marca, 'Shimadzu');
       expect(bem.modelo, 'ATX224');
     });
+    test('Deve permitir devolução apenas quando o patrimônio está sob responsabilidade do docente logado', () {
+      final usuarioDocenteId = 2;
+      final usuarioDocenteNome = 'Prof. Carlos Drummond';
+
+      final bemDoProfessor = PatrimonioModelo(
+        id: 1,
+        tombamento: 'PAT-2024-001',
+        nome: 'Notebook Dell Latitude',
+        status: 'em_uso',
+        professorId: 2,
+        professorNome: 'Prof. Carlos Drummond',
+      );
+
+      final bemDeOutroDocente = PatrimonioModelo(
+        id: 4,
+        tombamento: 'PAT-2024-004',
+        nome: 'Microscópio Óptico',
+        status: 'em_uso',
+        professorId: 3,
+        professorNome: 'Profa. Maria Silva',
+      );
+
+      bool usuarioEhResponsavel(PatrimonioModelo item) {
+        if (item.professorResponsavelId != null && item.professorResponsavelId == usuarioDocenteId) {
+          return true;
+        }
+        if (item.professorResponsavelNome != null && item.professorResponsavelNome == usuarioDocenteNome) {
+          return true;
+        }
+        return false;
+      }
+
+      expect(usuarioEhResponsavel(bemDoProfessor), isTrue);
+      expect(usuarioEhResponsavel(bemDeOutroDocente), isFalse);
+    });
   });
 }

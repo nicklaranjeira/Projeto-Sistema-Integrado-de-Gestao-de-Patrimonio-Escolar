@@ -4,7 +4,9 @@ import '../model/usuario_modelo.dart';
 import '../service/api_servico.dart';
 import '../service/armazenamento_servico.dart';
 import '../service/autenticacao_servico.dart';
+import '../service/jwt_servico.dart';
 import '../routes/rotas_app.dart';
+import 'professor_controlador.dart';
 
 class AutenticacaoControlador extends GetxController {
   final AutenticacaoServico _autenticacaoServico = Get.find<AutenticacaoServico>();
@@ -24,6 +26,7 @@ class AutenticacaoControlador extends GetxController {
   final nomeController = TextEditingController();
   final departamentoController = TextEditingController();
   final telefoneController = TextEditingController();
+  final cpfController = TextEditingController();
   final codigoController = TextEditingController();
 
   final formularioLoginChave = GlobalKey<FormState>();
@@ -46,6 +49,7 @@ class AutenticacaoControlador extends GetxController {
     nomeController.dispose();
     departamentoController.dispose();
     telefoneController.dispose();
+    cpfController.dispose();
     codigoController.dispose();
     super.onClose();
   }
@@ -58,8 +62,15 @@ class AutenticacaoControlador extends GetxController {
     final usuario = _armazenamento.obterUsuario();
 
     if (token != null && token.isNotEmpty && usuario != null) {
+      if (JwtServico.estaExpirado(token)) {
+        await _armazenamento.limparTudo();
+        usuarioAtual.value = null;
+        Get.offAllNamed(RotasApp.LOGIN);
+        return;
+      }
       usuarioAtual.value = usuario;
-      _redirecionarPorPapel(usuario.papel);
+      final papelJwt = JwtServico.extrairRole(token);
+      _redirecionarPorPapel(papelJwt);
     } else {
       Get.offAllNamed(RotasApp.LOGIN);
     }
@@ -69,20 +80,47 @@ class AutenticacaoControlador extends GetxController {
     if (!formularioLoginChave.currentState!.validate()) return;
 
     final senha = senhaController.text.trim();
-    if (!senha.endsWith('01') && !senha.endsWith('02') && !senha.startsWith('02')) {
-      _exibirMensagemErro(
-        'Identificação de Perfil',
-        'Para identificação de acesso:\n• Senha terminando com 01: Coordenador\n• Senha terminando com 02: Professor',
-      );
-      return;
+    final identificador = emailController.text.trim();
+    String emailLogin = identificador.toLowerCase();
+
+    // Se o usuário digitou nome ou matrícula sem '@', tenta resolver para o e-mail cadastrado
+    if (!emailLogin.contains('@')) {
+      final prof = ProfessorControlador.professoresCadastradosEmMemoria.firstWhereOrNull((p) {
+        return p.nome.toLowerCase() == emailLogin ||
+            (p.matricula != null && p.matricula!.toLowerCase() == emailLogin) ||
+            p.email.toLowerCase().startsWith(emailLogin);
+      });
+
+      if (prof != null) {
+        emailLogin = prof.email.toLowerCase();
+      } else if (emailLogin.contains('carlos drummond') || emailLogin == 'carlos') {
+        emailLogin = 'professor@escola.com';
+      } else if (emailLogin.contains('maria silva') || emailLogin == 'maria') {
+        emailLogin = 'maria.silva@escola.com';
+      } else if (emailLogin == 'admin' || emailLogin == 'coordenador') {
+        emailLogin = 'admin@admin.com';
+      } else {
+        emailLogin = '${emailLogin.replaceAll(' ', '.')}@escola.edu.br';
+      }
     }
 
     carregando.value = true;
     try {
-      final resposta = await _autenticacaoServico.login(
-        emailController.text,
-        senhaController.text,
+      Response resposta = await _autenticacaoServico.login(
+        emailLogin,
+        senha,
       );
+
+      // Se falhou e tínhamos tentado inferir um e-mail diferente da entrada bruta, tenta com a entrada bruta
+      if (!resposta.isOk && emailLogin != identificador.toLowerCase()) {
+        final retry = await _autenticacaoServico.login(
+          identificador,
+          senha,
+        );
+        if (retry.isOk) {
+          resposta = retry;
+        }
+      }
 
       if (resposta.isOk && resposta.body != null) {
         final dados = resposta.body is Map ? resposta.body : {};
@@ -97,8 +135,10 @@ class AutenticacaoControlador extends GetxController {
           mapaUsuario = Map<String, dynamic>.from(dados);
         }
 
-        final papel = senha.endsWith('01') ? 'admin' : 'docente';
-        final ehAdmin = papel == 'admin';
+        // VERIFICAÇÃO DO ROLE DIRETAMENTE DAS CLAIMS DO JWT
+        final papel = JwtServico.extrairRole(token);
+        final ehAdmin = JwtServico.ehAdmin(token);
+
         final usuario = UsuarioModelo.fromJson(mapaUsuario).copyWith(
           token: token,
           refreshToken: refreshToken,
@@ -129,56 +169,28 @@ class AutenticacaoControlador extends GetxController {
 
         _redirecionarPorPapel(usuario.papel);
       } else {
-        await _autenticarDemonstracaoPorSenha(senha);
+        final erro = _api.tratarErro(resposta);
+        Get.snackbar(
+          'Falha no Login',
+          erro.isNotEmpty ? erro : 'Credenciais inválidas. Verifique seu e-mail e senha.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade700,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
       }
     } catch (e) {
-      await _autenticarDemonstracaoPorSenha(senha);
+      Get.snackbar(
+        'Erro de Conexão',
+        'Não foi possível conectar ao servidor da API (http://localhost:8081).',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade700,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
     } finally {
       carregando.value = false;
     }
-  }
-
-  Future<void> _autenticarDemonstracaoPorSenha(String senha) async {
-    final ehAdmin = senha.endsWith('01');
-    final papel = ehAdmin ? 'admin' : 'docente';
-    final userInput = emailController.text.trim();
-    final ehEmail = userInput.contains('@');
-
-    String nomeUsuario = ehAdmin ? 'Coordenadora Ana Paula' : 'Prof. Carlos Drummond';
-    if (!ehAdmin && !ehEmail && userInput.isNotEmpty) {
-      nomeUsuario = userInput;
-    }
-
-    final usuario = UsuarioModelo(
-      id: ehAdmin ? 1 : 2,
-      nome: nomeUsuario,
-      email: userInput.isNotEmpty
-          ? (ehEmail ? userInput : '${userInput.toLowerCase().replaceAll(' ', '.')}@escola.gov.br')
-          : (ehAdmin ? 'coordenador@escola.gov.br' : 'carlos.drummond@escola.gov.br'),
-      papel: papel,
-      password: senha,
-      departamento: ehAdmin ? 'Coordenação Geral Pedagógica' : 'Língua Portuguesa e Literatura',
-      telefone: ehAdmin ? '(11) 98765-4321' : '(11) 91234-5678',
-      cpf: ehAdmin ? '123.456.789-01' : '987.654.321-02',
-      token: 'jwt_mock_${papel}_token',
-    );
-
-    await _armazenamento.salvarToken(usuario.token!);
-    await _armazenamento.salvarUsuario(usuario);
-
-    usuarioAtual.value = usuario;
-    _limparCampos();
-
-    Get.snackbar(
-      'Acesso Autorizado',
-      'Conectado como ${ehAdmin ? "Coordenador" : "Professor"}!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green.shade600,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 3),
-    );
-
-    _redirecionarPorPapel(papel);
   }
 
   Future<void> cadastrarCoordenador() async {
@@ -197,13 +209,19 @@ class AutenticacaoControlador extends GetxController {
         senha: senhaController.text,
         departamento: departamentoController.text,
         telefone: telefoneController.text,
+        cpf: cpfController.text,
       );
 
       if (resposta.isOk) {
+        final emailCadastrado = emailController.text.trim().toLowerCase();
+        final senhaCadastrada = senhaController.text;
         _limparCampos();
+        emailController.text = emailCadastrado;
+        senhaController.text = senhaCadastrada;
+
         Get.snackbar(
           'Cadastro Realizado!',
-          'Conta de Coordenador criada com sucesso. Faça login para continuar.',
+          'Conta de Coordenador criada com sucesso. Suas credenciais foram preenchidas no formulário.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.shade600,
           colorText: Colors.white,
@@ -351,6 +369,7 @@ class AutenticacaoControlador extends GetxController {
     nomeController.clear();
     departamentoController.clear();
     telefoneController.clear();
+    cpfController.clear();
     codigoController.clear();
   }
 

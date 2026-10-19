@@ -5,9 +5,9 @@ class PainelServico extends GetxService {
   final ApiServico _api = Get.find<ApiServico>();
 
   Future<Response> obterEstatisticas() async {
-    Response res = await _api.get('/api/dashboard/stats');
+    Response res = await _api.get('/api/admin/patrimonios/stats');
     if (res.statusCode == 404) {
-      res = await _api.get('/api/dashboard');
+      res = await _api.get('/api/dashboard/stats');
     }
     return res;
   }

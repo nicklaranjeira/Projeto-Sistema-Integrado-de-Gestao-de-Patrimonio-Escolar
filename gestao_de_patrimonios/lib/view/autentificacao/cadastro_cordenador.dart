@@ -75,22 +75,7 @@ class CadastroCoordenadorView extends GetView<AutenticacaoControlador> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Nome Completo
-                          CampoTextoPersonalizado(
-                            controlador: controller.nomeController,
-                            rotulo: 'Nome Completo',
-                            dica: 'Ex: Profa. Maria Oliveira',
-                            iconePrefixo: Icons.person_outline_rounded,
-                            validador: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return 'Informe o nome completo';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-
-                          // E-mail Institucional
+                          // 1. E-mail Institucional
                           CampoTextoPersonalizado(
                             controlador: controller.emailController,
                             rotulo: 'E-mail Institucional',
@@ -109,37 +94,12 @@ class CadastroCoordenadorView extends GetView<AutenticacaoControlador> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Departamento / Coordenação
-                          CampoTextoPersonalizado(
-                            controlador: controller.departamentoController,
-                            rotulo: 'Departamento / Unidade',
-                            dica: 'Ex: Coordenação Geral, Diretoria de Ensino',
-                            iconePrefixo: Icons.apartment_outlined,
-                            validador: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return 'Informe o departamento ou setor';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Telefone
-                          CampoTextoPersonalizado(
-                            controlador: controller.telefoneController,
-                            rotulo: 'Telefone / WhatsApp',
-                            dica: '(11) 98765-4321',
-                            iconePrefixo: Icons.phone_outlined,
-                            tipoTeclado: TextInputType.phone,
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Senha
+                          // 2. Senha / Password
                           Obx(
                             () => CampoTextoPersonalizado(
                               controlador: controller.senhaController,
-                              rotulo: 'Senha Provisória ou de Acesso',
-                              dica: 'Crie uma senha segura (mín. 6 caracteres)',
+                              rotulo: 'Password / Senha',
+                              dica: 'Crie sua senha de acesso (mínimo 6 caracteres)',
                               iconePrefixo: Icons.lock_outline_rounded,
                               ocultarTexto: !controller.senhaVisivel.value,
                               sufixo: IconButton(
@@ -192,12 +152,74 @@ class CadastroCoordenadorView extends GetView<AutenticacaoControlador> {
                               },
                             ),
                           ),
+                          const SizedBox(height: 16),
+
+                          // 3. Nome Completo
+                          CampoTextoPersonalizado(
+                            controlador: controller.nomeController,
+                            rotulo: 'Nome Completo',
+                            dica: 'Ex: Profa. Maria Oliveira',
+                            iconePrefixo: Icons.person_outline_rounded,
+                            validador: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o nome completo';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // 4. Departamento / Coordenação
+                          CampoTextoPersonalizado(
+                            controlador: controller.departamentoController,
+                            rotulo: 'Departamento / Unidade',
+                            dica: 'Ex: Coordenação Geral e Pedagógica',
+                            iconePrefixo: Icons.apartment_outlined,
+                            validador: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o departamento ou setor';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // 5. Telefone
+                          CampoTextoPersonalizado(
+                            controlador: controller.telefoneController,
+                            rotulo: 'Telefone / WhatsApp',
+                            dica: '(11) 98765-4321',
+                            iconePrefixo: Icons.phone_outlined,
+                            tipoTeclado: TextInputType.phone,
+                            validador: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o telefone de contato';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // 6. CPF
+                          CampoTextoPersonalizado(
+                            controlador: controller.cpfController,
+                            rotulo: 'CPF',
+                            dica: '123.456.789-00',
+                            iconePrefixo: Icons.badge_outlined,
+                            tipoTeclado: TextInputType.number,
+                            validador: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o CPF';
+                              }
+                              return null;
+                            },
+                          ),
                           const SizedBox(height: 24),
 
                           // Botão de Cadastrar
                           Obx(
                             () => BotaoPersonalizado(
-                              texto: 'Finalizar Cadastro de Gestor',
+                              texto: 'Criar conta de coordenador',
                               icone: Icons.how_to_reg_rounded,
                               carregando: controller.carregando.value,
                               aoPressionar: controller.cadastrarCoordenador,

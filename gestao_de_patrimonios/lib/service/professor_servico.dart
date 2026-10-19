@@ -12,18 +12,25 @@ class ProfessorServico extends GetxService {
     if (status != null && status.isNotEmpty) query['status'] = status;
     if (busca != null && busca.isNotEmpty) query['busca'] = busca;
 
-    return await _api.get('/api/professores', query: query);
+    Response res = await _api.get('/api/admin/professores', query: query);
+    if (res.statusCode == 404) {
+      res = await _api.get('/api/professores', query: query);
+    }
+    return res;
   }
 
-
   Future<Response> obterProfessorPorId(int id) async {
-  return await _api.get(
-    '/api/admin/professores/$id',
-  );
-}
+    return await _api.get(
+      '/api/admin/professores/$id',
+    );
+  }
 
   Future<Response> cadastrarProfessor(Map<String, dynamic> dados) async {
-    return await _api.post('/api/professores', dados);
+    Response res = await _api.post('/api/admin/professores', dados);
+    if (res.statusCode == 404) {
+      res = await _api.post('/api/professores', dados);
+    }
+    return res;
   }
 
   Future<Response> atualizarProfessor(int id, Map<String, dynamic> dados) async {

@@ -32,6 +32,7 @@ class ProfessorModelo {
   int get quantidadePatrimonios => patrimonios.isNotEmpty ? patrimonios.length : totalPatrimoniosAlocados;
 
   factory ProfessorModelo.fromJson(Map<String, dynamic> json) {
+    final totalPat = json['total_patrimonios'] ?? json['totalPatrimonios'];
     return ProfessorModelo(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       nome: json['nome'] ?? json['name'] ?? '',
@@ -40,16 +41,20 @@ class ProfessorModelo {
       departamento: json['departamento'] ?? json['department'],
       telefone: json['telefone'] ?? json['phone'],
       status: json['status'] ?? 'ativo',
-      totalPatrimoniosAlocados: json['total_patrimonios'] is int
-          ? json['total_patrimonios']
-          : int.tryParse(json['total_patrimonios']?.toString() ?? '0') ?? 0,
+      totalPatrimoniosAlocados: totalPat is int
+          ? totalPat
+          : int.tryParse(totalPat?.toString() ?? '0') ?? 0,
       patrimonios: (json['patrimonios'] is List)
           ? (json['patrimonios'] as List)
               .map((p) => PatrimonioModelo.fromJson(Map<String, dynamic>.from(p as Map)))
               .toList()
           : const [],
-      dataCriacao: json['criado_em'] != null ? DateTime.tryParse(json['criado_em']) : null,
-      dataAtualizacao: json['atualizado_em'] != null ? DateTime.tryParse(json['atualizado_em']) : null,
+      dataCriacao: (json['criado_em'] ?? json['createdAt']) != null
+          ? DateTime.tryParse(json['criado_em'] ?? json['createdAt'])
+          : null,
+      dataAtualizacao: (json['atualizado_em'] ?? json['updatedAt']) != null
+          ? DateTime.tryParse(json['atualizado_em'] ?? json['updatedAt'])
+          : null,
     );
   }
 

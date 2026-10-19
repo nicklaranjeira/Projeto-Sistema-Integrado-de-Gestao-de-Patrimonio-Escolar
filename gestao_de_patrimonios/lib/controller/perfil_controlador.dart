@@ -49,7 +49,7 @@ class PerfilControlador extends GetxController {
 
     nomeController.text = user.nome.isNotEmpty ? user.nome : (ehAdmin ? 'Prof. Carlos Drummond (Coordenador)' : 'Prof. Carlos Drummond');
     emailController.text = user.email.isNotEmpty ? user.email : (ehAdmin ? 'coordenador@escola.gov.br' : 'carlos.drummond@escola.gov.br');
-    passwordController.text = user.password ?? (ehAdmin ? 'admin01' : 'prof02');
+    passwordController.text = user.password ?? (ehAdmin ? 'admin123' : 'prof123');
     departamentoController.text = user.departamento ?? (ehAdmin ? 'Coordenação Geral Pedagógica' : 'Língua Portuguesa e Literatura');
     telefoneController.text = user.telefone ?? (ehAdmin ? '(11) 98765-4321' : '(11) 91234-5678');
     cpfController.text = user.cpf ?? (ehAdmin ? '123.456.789-01' : '987.654.321-02');

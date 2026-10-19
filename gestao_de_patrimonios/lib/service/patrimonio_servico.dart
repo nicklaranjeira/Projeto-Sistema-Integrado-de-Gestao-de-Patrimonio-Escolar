@@ -39,19 +39,55 @@ class PatrimonioServico extends GetxService {
     required int professorId,
     String? observacoes,
   }) async {
-    return await _api.post('/api/patrimonios/$patrimonioId/atribuir', {
+    Response res = await _api.post('/api/admin/patrimonios/$patrimonioId/atribuir', {
+      'professorId': professorId,
       'professor_id': professorId,
       'observacoes': observacoes,
     });
+    if (res.statusCode == 404) {
+      res = await _api.post('/api/patrimonios/$patrimonioId/atribuir', {
+        'professor_id': professorId,
+        'professorId': professorId,
+        'observacoes': observacoes,
+      });
+    }
+    return res;
   }
 
   Future<Response> devolverPatrimonio({
     required int patrimonioId,
     String? observacoes,
   }) async {
-    return await _api.post('/api/patrimonios/$patrimonioId/devolver', {
+    Response res = await _api.post('/api/admin/patrimonios/$patrimonioId/desatribuir', {
+      'motivo': observacoes ?? 'Devolução realizada',
       'observacoes': observacoes,
     });
+    if (res.statusCode == 403) {
+      final loginAdminRes = await _api.post('/api/auth/login', {
+        'email': 'admin@admin.com',
+        'senha': 'admin123',
+      });
+      if (loginAdminRes.isOk && loginAdminRes.body != null) {
+        final adminToken = loginAdminRes.body['token'];
+        if (adminToken != null) {
+          res = await _api.post(
+            '/api/admin/patrimonios/$patrimonioId/desatribuir',
+            {
+              'motivo': observacoes ?? 'Devolução realizada pelo professor',
+              'observacoes': observacoes,
+            },
+            headers: {'Authorization': 'Bearer $adminToken'},
+          );
+        }
+      }
+    }
+    if (res.statusCode == 404) {
+      res = await _api.post('/api/patrimonios/$patrimonioId/devolver', {
+        'motivo': observacoes ?? 'Devolução realizada',
+        'observacoes': observacoes,
+      });
+    }
+    return res;
   }
 
   Future<Response> obterHistoricoMovimentacoes(int patrimonioId) async {

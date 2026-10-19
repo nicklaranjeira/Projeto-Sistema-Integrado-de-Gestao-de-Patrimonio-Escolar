@@ -46,10 +46,14 @@ class ProfessorControlador extends GetxController {
     usuarioAcessoController.text = nomeController.text.trim();
     final mat = matriculaController.text.trim();
     final digitos = mat.replaceAll(RegExp(r'\D'), '');
-    if (digitos.isNotEmpty) {
-      senhaAcessoController.text = '${digitos}02';
+    if (digitos.length >= 6) {
+      senhaAcessoController.text = digitos;
+    } else if (digitos.isNotEmpty) {
+      senhaAcessoController.text = 'prof$digitos'.padRight(6, '0');
+    } else if (mat.length >= 6) {
+      senhaAcessoController.text = mat;
     } else if (mat.isNotEmpty) {
-      senhaAcessoController.text = '${mat}02';
+      senhaAcessoController.text = 'prof$mat'.padRight(6, '0');
     } else {
       senhaAcessoController.text = '';
     }
@@ -78,7 +82,9 @@ class ProfessorControlador extends GetxController {
       );
 
       if (resposta.isOk && resposta.body != null) {
-        final List dados = resposta.body is List ? resposta.body : (resposta.body['data'] ?? []);
+        final List dados = resposta.body is List
+            ? resposta.body
+            : (resposta.body['professores'] ?? resposta.body['data'] ?? []);
         final professores = dados
             .map((e) => ProfessorModelo.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
@@ -137,9 +143,17 @@ class ProfessorControlador extends GetxController {
     try {
       final resposta = await _professorServico.obterProfessorPorId(id);
       if (resposta.isOk && resposta.body != null) {
-        final dados = Map<String, dynamic>.from(resposta.body is Map ? resposta.body : {});
+        final dados = Map<String, dynamic>.from(
+            resposta.body is Map ? (resposta.body['professor'] ?? resposta.body) : {});
         professorSelecionado.value = ProfessorModelo.fromJson(dados);
-        await carregarPatrimoniosDoProfessor(id);
+        if (resposta.body is Map && resposta.body['patrimonios'] is List) {
+          final List bens = resposta.body['patrimonios'];
+          patrimoniosDoProfessor.assignAll(
+            bens.map((e) => PatrimonioModelo.fromJson(Map<String, dynamic>.from(e as Map))).toList(),
+          );
+        } else {
+          await carregarPatrimoniosDoProfessor(id);
+        }
       } else {
         final erro = _api.tratarErro(resposta);
         _exibirErro('Erro', erro);
@@ -155,7 +169,9 @@ class ProfessorControlador extends GetxController {
     try {
       final resposta = await _professorServico.obterPatrimoniosDoProfessor(professorId);
       if (resposta.isOk && resposta.body != null) {
-        final List dados = resposta.body is List ? resposta.body : (resposta.body['data'] ?? []);
+        final List dados = resposta.body is List
+            ? resposta.body
+            : (resposta.body['patrimonios'] ?? resposta.body['items'] ?? resposta.body['data'] ?? []);
         final patrimonios = dados
             .map((e) => PatrimonioModelo.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
@@ -183,21 +199,39 @@ class ProfessorControlador extends GetxController {
   Future<void> salvarProfessor() async {
     if (!formularioChave.currentState!.validate()) return;
 
+    final nome = nomeController.text.trim();
+    final matricula = matriculaController.text.trim().isEmpty ? null : matriculaController.text.trim();
+    final email = emailController.text.trim().toLowerCase();
+    final usuario = usuarioAcessoController.text.trim().isNotEmpty ? usuarioAcessoController.text.trim() : nome;
+    String senha = senhaAcessoController.text.trim();
+
+    if (senha.isEmpty) {
+      final digitos = (matricula ?? '').replaceAll(RegExp(r'\D'), '');
+      if (digitos.length >= 6) {
+        senha = digitos;
+      } else if (digitos.isNotEmpty) {
+        senha = 'prof$digitos'.padRight(6, '0');
+      } else {
+        senha = 'prof123';
+      }
+    }
+
+    if (senha.length < 6) {
+      _exibirErro('Validação', 'A senha de acesso do professor deve conter no mínimo 6 caracteres.');
+      return;
+    }
+
     salvando.value = true;
     try {
-      final nome = nomeController.text.trim();
-      final matricula = matriculaController.text.trim().isEmpty ? null : matriculaController.text.trim();
-      final usuario = usuarioAcessoController.text.trim().isNotEmpty ? usuarioAcessoController.text.trim() : nome;
-      final senha = senhaAcessoController.text.trim().isNotEmpty ? senhaAcessoController.text.trim() : '${(matricula ?? "2024").replaceAll(RegExp(r'\D'), '')}02';
-
       final dados = {
         'nome': nome,
-        'email': emailController.text.trim(),
+        'email': email,
+        'password': senha,
+        'senha': senha,
         'matricula': matricula,
         'departamento': departamentoController.text.trim().isEmpty ? null : departamentoController.text.trim(),
         'telefone': telefoneController.text.trim().isEmpty ? null : telefoneController.text.trim(),
         'usuario': usuario,
-        'senha': senha,
       };
 
       Response resposta;
@@ -209,23 +243,29 @@ class ProfessorControlador extends GetxController {
         resposta = await _professorServico.cadastrarProfessor(dados);
       }
 
-      final novoProf = ProfessorModelo(
-        id: ehEdicao ? professorSelecionado.value!.id : DateTime.now().millisecondsSinceEpoch,
-        nome: nome,
-        email: emailController.text.trim(),
-        matricula: matricula,
-        departamento: departamentoController.text.trim().isEmpty ? null : departamentoController.text.trim(),
-        telefone: telefoneController.text.trim().isEmpty ? null : telefoneController.text.trim(),
-        status: 'ativo',
-      );
-
-      if (!ehEdicao) {
-        professoresCadastradosEmMemoria.add(novoProf);
-        listaProfessores.add(novoProf);
-        aplicarFiltrosLocais();
-      }
-
       if (resposta.isOk) {
+        final Map corpoResp = resposta.body is Map ? resposta.body : {};
+        final Map profApi = corpoResp['professor'] is Map ? corpoResp['professor'] : corpoResp;
+        final int idGerado = profApi['id'] is int
+            ? profApi['id']
+            : (ehEdicao ? professorSelecionado.value!.id : DateTime.now().millisecondsSinceEpoch);
+
+        final novoProf = ProfessorModelo(
+          id: idGerado,
+          nome: profApi['nome']?.toString() ?? nome,
+          email: profApi['email']?.toString() ?? email,
+          matricula: profApi['matricula']?.toString() ?? matricula,
+          departamento: profApi['departamento']?.toString() ?? (departamentoController.text.trim().isEmpty ? null : departamentoController.text.trim()),
+          telefone: profApi['telefone']?.toString() ?? (telefoneController.text.trim().isEmpty ? null : telefoneController.text.trim()),
+          status: 'ativo',
+        );
+
+        if (!ehEdicao) {
+          professoresCadastradosEmMemoria.add(novoProf);
+          listaProfessores.add(novoProf);
+          aplicarFiltrosLocais();
+        }
+
         _limparFormulario();
         await listarProfessores();
         Get.back();
@@ -233,57 +273,18 @@ class ProfessorControlador extends GetxController {
           ehEdicao ? 'Sucesso' : 'Professor Cadastrado com Sucesso!',
           ehEdicao
               ? 'Professor atualizado com sucesso!'
-              : 'Credenciais de Acesso:\n• Usuário: $usuario\n• Senha: $senha',
+              : 'Credenciais de Acesso:\n• E-mail (Login): $email\n• Senha: $senha\n• Matrícula: ${matricula ?? "-"}\n\nO professor deve entrar utilizando este E-MAIL e SENHA.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.shade600,
           colorText: Colors.white,
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 6),
         );
       } else {
-        // Fallback em caso de backend mock/offline
-        _limparFormulario();
-        Get.back();
-        Get.snackbar(
-          ehEdicao ? 'Sucesso' : 'Professor Cadastrado!',
-          ehEdicao
-              ? 'Professor atualizado com sucesso!'
-              : 'Credenciais de Acesso geradas:\n• Usuário: $usuario\n• Senha: $senha',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade600,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 5),
-        );
+        final erro = _api.tratarErro(resposta);
+        _exibirErro('Falha no Cadastro do Professor', erro);
       }
     } catch (e) {
-      // Fallback gracioso
-      final nome = nomeController.text.trim();
-      final matricula = matriculaController.text.trim().isEmpty ? null : matriculaController.text.trim();
-      final usuario = usuarioAcessoController.text.trim().isNotEmpty ? usuarioAcessoController.text.trim() : nome;
-      final senha = senhaAcessoController.text.trim().isNotEmpty ? senhaAcessoController.text.trim() : '${(matricula ?? "2024").replaceAll(RegExp(r'\D'), '')}02';
-
-      final novoProf = ProfessorModelo(
-        id: DateTime.now().millisecondsSinceEpoch,
-        nome: nome,
-        email: emailController.text.trim(),
-        matricula: matricula,
-        departamento: departamentoController.text.trim().isEmpty ? null : departamentoController.text.trim(),
-        telefone: telefoneController.text.trim().isEmpty ? null : telefoneController.text.trim(),
-        status: 'ativo',
-      );
-      professoresCadastradosEmMemoria.add(novoProf);
-      listaProfessores.add(novoProf);
-      aplicarFiltrosLocais();
-
-      _limparFormulario();
-      Get.back();
-      Get.snackbar(
-        'Professor Cadastrado!',
-        'Credenciais de Acesso:\n• Usuário: $usuario\n• Senha: $senha',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade600,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+      _exibirErro('Erro de Conexão', 'Não foi possível comunicar com a API. Verifique se o backend está em execução.');
     } finally {
       salvando.value = false;
     }

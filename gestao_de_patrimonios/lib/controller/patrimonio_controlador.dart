@@ -91,7 +91,9 @@ class PatrimonioControlador extends GetxController {
       );
 
       if (resposta.isOk && resposta.body != null) {
-        final List dados = resposta.body is List ? resposta.body : (resposta.body['data'] ?? []);
+        final List dados = resposta.body is List
+            ? resposta.body
+            : (resposta.body['items'] ?? resposta.body['data'] ?? []);
         final patrimonios = dados
             .map((e) => PatrimonioModelo.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
@@ -249,8 +251,10 @@ class PatrimonioControlador extends GetxController {
     salvando.value = true;
     try {
       final dados = {
-        'nome': nomeController.text.trim(),
+        'codigo': numeroTomboController.text.trim(),
         'numero_tombo': numeroTomboController.text.trim(),
+        'nome': nomeController.text.trim(),
+        'numeroSerie': numeroSerieController.text.trim().isEmpty ? null : numeroSerieController.text.trim(),
         'numero_serie': numeroSerieController.text.trim().isEmpty ? null : numeroSerieController.text.trim(),
         'categoria': categoriaController.text.trim().isEmpty ? null : categoriaController.text.trim(),
         'localizacao': localizacaoController.text.trim().isEmpty ? null : localizacaoController.text.trim(),
@@ -293,7 +297,9 @@ class PatrimonioControlador extends GetxController {
     try {
       final resposta = await _professorServico.listarProfessores(status: 'ativo');
       if (resposta.isOk && resposta.body != null) {
-        final List dados = resposta.body is List ? resposta.body : (resposta.body['data'] ?? []);
+        final List dados = resposta.body is List
+            ? resposta.body
+            : (resposta.body['professores'] ?? resposta.body['data'] ?? []);
         final professores = dados
             .map((e) => ProfessorModelo.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();

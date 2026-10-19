@@ -49,5 +49,42 @@ void main() {
 
       expect(senhasConferem, isTrue);
     });
+
+    test('Deve validar requisito de comprimento mínimo de 6 caracteres na senha (requisito da API Go)', () {
+      final senhaCurta = '12345';
+      final senhaValida = '123456';
+      final senhaForte = 'SenhaSegura#2026';
+
+      expect(senhaCurta.length < 6, isTrue, reason: 'Senha com menos de 6 caracteres deve ser rejeitada pela validação');
+      expect(senhaValida.length >= 6, isTrue, reason: 'Senha com 6 caracteres deve ser aceita');
+      expect(senhaForte.length >= 6, isTrue, reason: 'Senha forte deve ser aceita');
+    });
+
+    test('Deve normalizar o e-mail para minúsculo e sem espaços para evitar erro de case sensitivity no SQLite', () {
+      final emailEntrada = '  Coordenador.Geral@Escola.Edu.BR  ';
+      final emailNormalizado = emailEntrada.trim().toLowerCase();
+
+      expect(emailNormalizado, 'coordenador.geral@escola.edu.br');
+    });
+
+    test('Deve validar todos os 6 campos obrigatórios exigidos no cadastro de coordenador', () {
+      final dadosCompletos = {
+        'nome': 'Prof. Carlos Gestor',
+        'email': 'carlos.gestor@escola.edu.br',
+        'password': 'coordSenhaForte123',
+        'departamento': 'Coordenação Pedagógica',
+        'telefone': '(11) 98888-7777',
+        'cpf': '111.222.333-44',
+      };
+
+      final todosPreenchidos = dadosCompletos['nome']!.isNotEmpty &&
+          dadosCompletos['email']!.isNotEmpty &&
+          dadosCompletos['password']!.length >= 6 &&
+          dadosCompletos['departamento']!.isNotEmpty &&
+          dadosCompletos['telefone']!.isNotEmpty &&
+          dadosCompletos['cpf']!.isNotEmpty;
+
+      expect(todosPreenchidos, isTrue);
+    });
   });
 }

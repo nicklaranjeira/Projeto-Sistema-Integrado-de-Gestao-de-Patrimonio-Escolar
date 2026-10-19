@@ -6,7 +6,7 @@ class AutenticacaoServico extends GetxService {
 
   Future<Response> login(String email, String senha) async {
     return await _api.post('/api/auth/login', {
-      'email': email.trim(),
+      'email': email.trim().toLowerCase(),
       'password': senha,
     });
   }
@@ -17,14 +17,16 @@ class AutenticacaoServico extends GetxService {
     required String senha,
     String? departamento,
     String? telefone,
+    String? cpf,
   }) async {
     return await _api.post('/api/auth/register', {
       'name': nome.trim(),
       'nome': nome.trim(),
-      'email': email.trim(),
+      'email': email.trim().toLowerCase(),
       'password': senha,
       'departamento': departamento?.trim(),
       'telefone': telefone?.trim(),
+      'cpf': cpf?.trim(),
       'role': 'admin',
       'papel': 'admin',
     });
