@@ -136,10 +136,47 @@ class PerfilView extends GetView<PerfilControlador> {
                       // E-mail (somente leitura)
                       CampoTextoPersonalizado(
                         controlador: controller.emailController,
-                        rotulo: 'E-mail Institucional (Identificador)',
+                        rotulo: 'E-mail Institucional',
                         iconePrefixo: Icons.email_outlined,
                         somenteLeitura: true,
                         dica: 'O e-mail é gerido institucionalmente',
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Senha / Password
+                      Obx(
+                        () => CampoTextoPersonalizado(
+                          controlador: controller.passwordController,
+                          rotulo: 'Senha (Password) *',
+                          dica: 'Sua senha de acesso',
+                          iconePrefixo: Icons.lock_outline_rounded,
+                          ocultarTexto: !controller.senhaVisivel.value,
+                          sufixo: IconButton(
+                            tooltip: controller.senhaVisivel.value ? 'Ocultar senha' : 'Exibir senha',
+                            icon: Icon(
+                              controller.senhaVisivel.value
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: tema.colorScheme.primary,
+                            ),
+                            onPressed: controller.alternarVisibilidadeSenha,
+                          ),
+                          validador: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Informe sua senha';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Departamento
+                      CampoTextoPersonalizado(
+                        controlador: controller.departamentoController,
+                        rotulo: 'Departamento / Área de Ensino',
+                        dica: 'Ex: Ciências Exatas e Tecnologia',
+                        iconePrefixo: Icons.apartment_outlined,
                       ),
                       const SizedBox(height: 16),
 
@@ -153,12 +190,13 @@ class PerfilView extends GetView<PerfilControlador> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Departamento
+                      // CPF
                       CampoTextoPersonalizado(
-                        controlador: controller.departamentoController,
-                        rotulo: 'Departamento / Área de Ensino',
-                        dica: 'Ex: Ciências Exatas e Tecnologia',
-                        iconePrefixo: Icons.apartment_outlined,
+                        controlador: controller.cpfController,
+                        rotulo: 'CPF',
+                        dica: '000.000.000-00',
+                        iconePrefixo: Icons.badge_outlined,
+                        tipoTeclado: TextInputType.number,
                       ),
                       const SizedBox(height: 20),
 

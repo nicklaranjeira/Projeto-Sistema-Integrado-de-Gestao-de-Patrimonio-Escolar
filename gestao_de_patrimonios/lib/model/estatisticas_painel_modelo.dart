@@ -6,51 +6,67 @@ class EstatisticasPainelModelo {
   final int totalBaixados;
   final int totalProfessores;
   final int totalProfessoresAtivos;
+  final int totalUsuarios;
   final Map<String, int> contagemPorCategoria;
+
+  // Aliases compatíveis com RF05
+  int get emUso => totalAlocados;
+  int get disponiveis => totalDisponiveis;
+  int get emManutencao => totalManutencao;
+  Map<String, int> get categorias => contagemPorCategoria;
 
   EstatisticasPainelModelo({
     this.totalPatrimonios = 0,
-    this.totalAlocados = 0,
-    this.totalDisponiveis = 0,
-    this.totalManutencao = 0,
+    int? totalAlocados,
+    int? emUso,
+    int? totalDisponiveis,
+    int? disponiveis,
+    int? totalManutencao,
+    int? emManutencao,
     this.totalBaixados = 0,
     this.totalProfessores = 0,
+    int? totalUsuarios,
     this.totalProfessoresAtivos = 0,
-    this.contagemPorCategoria = const {},
-  });
+    Map<String, int>? contagemPorCategoria,
+    Map<String, int>? categorias,
+  })  : totalAlocados = totalAlocados ?? emUso ?? 0,
+        totalDisponiveis = totalDisponiveis ?? disponiveis ?? 0,
+        totalManutencao = totalManutencao ?? emManutencao ?? 0,
+        totalUsuarios = totalUsuarios ?? totalProfessores ?? 0,
+        contagemPorCategoria = contagemPorCategoria ?? categorias ?? const {};
 
   factory EstatisticasPainelModelo.vazio() => EstatisticasPainelModelo();
 
   factory EstatisticasPainelModelo.fromJson(Map<String, dynamic> json) {
     Map<String, int> categorias = {};
-    if (json['por_categoria'] is Map) {
-      (json['por_categoria'] as Map).forEach((k, v) {
+    final rawCat = json['por_categoria'] ?? json['categorias'];
+    if (rawCat is Map) {
+      rawCat.forEach((k, v) {
         categorias[k.toString()] = v is int ? v : int.tryParse(v.toString()) ?? 0;
       });
     }
 
+    int parseVal(dynamic v) {
+      if (v is int) return v;
+      if (v == null) return 0;
+      return int.tryParse(v.toString()) ?? 0;
+    }
+
+    final alocadosVal = json['total_alocados'] ?? json['em_uso'];
+    final disponiveisVal = json['total_disponiveis'] ?? json['disponiveis'];
+    final manutencaoVal = json['total_manutencao'] ?? json['em_manutencao'];
+    final profVal = json['total_professores'] ?? json['total_usuarios'];
+    final usuariosVal = json['total_usuarios'] ?? json['total_professores'];
+
     return EstatisticasPainelModelo(
-      totalPatrimonios: json['total_patrimonios'] is int
-          ? json['total_patrimonios']
-          : int.tryParse(json['total_patrimonios']?.toString() ?? '0') ?? 0,
-      totalAlocados: json['total_alocados'] is int
-          ? json['total_alocados']
-          : int.tryParse(json['total_alocados']?.toString() ?? '0') ?? 0,
-      totalDisponiveis: json['total_disponiveis'] is int
-          ? json['total_disponiveis']
-          : int.tryParse(json['total_disponiveis']?.toString() ?? '0') ?? 0,
-      totalManutencao: json['total_manutencao'] is int
-          ? json['total_manutencao']
-          : int.tryParse(json['total_manutencao']?.toString() ?? '0') ?? 0,
-      totalBaixados: json['total_baixados'] is int
-          ? json['total_baixados']
-          : int.tryParse(json['total_baixados']?.toString() ?? '0') ?? 0,
-      totalProfessores: json['total_professores'] is int
-          ? json['total_professores']
-          : int.tryParse(json['total_professores']?.toString() ?? '0') ?? 0,
-      totalProfessoresAtivos: json['total_professores_ativos'] is int
-          ? json['total_professores_ativos']
-          : int.tryParse(json['total_professores_ativos']?.toString() ?? '0') ?? 0,
+      totalPatrimonios: parseVal(json['total_patrimonios']),
+      totalAlocados: parseVal(alocadosVal),
+      totalDisponiveis: parseVal(disponiveisVal),
+      totalManutencao: parseVal(manutencaoVal),
+      totalBaixados: parseVal(json['total_baixados']),
+      totalProfessores: parseVal(profVal),
+      totalUsuarios: parseVal(usuariosVal),
+      totalProfessoresAtivos: parseVal(json['total_professores_ativos']),
       contagemPorCategoria: categorias,
     );
   }
@@ -59,12 +75,17 @@ class EstatisticasPainelModelo {
     return {
       'total_patrimonios': totalPatrimonios,
       'total_alocados': totalAlocados,
+      'em_uso': totalAlocados,
       'total_disponiveis': totalDisponiveis,
+      'disponiveis': totalDisponiveis,
       'total_manutencao': totalManutencao,
+      'em_manutencao': totalManutencao,
       'total_baixados': totalBaixados,
       'total_professores': totalProfessores,
+      'total_usuarios': totalUsuarios,
       'total_professores_ativos': totalProfessoresAtivos,
       'por_categoria': contagemPorCategoria,
+      'categorias': contagemPorCategoria,
     };
   }
 }

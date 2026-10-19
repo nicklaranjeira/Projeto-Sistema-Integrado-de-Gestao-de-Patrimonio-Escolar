@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controller/autenticacao_controlador.dart';
 import '../../routes/rotas_app.dart';
 
 /// Barra de navegação inferior padrão para os módulos do sistema.
@@ -14,6 +15,23 @@ class MenuInferior extends StatelessWidget {
   void _navegarPara(int index) {
     if (index == indiceAtual) return;
 
+    if (Get.isRegistered<AutenticacaoControlador>()) {
+      final auth = Get.find<AutenticacaoControlador>();
+      final usuario = auth.usuarioAtual.value;
+      if (usuario != null && usuario.eProfessor) {
+        if (index == 0 || index == 1) {
+          Get.snackbar(
+            'Acesso Restrito',
+            'Como Professor, você tem acesso apenas à tela do seu equipamento atribuído e ao seu perfil.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange.shade800,
+            colorText: Colors.white,
+          );
+          return;
+        }
+      }
+    }
+
     switch (index) {
       case 0:
         Get.offNamed(RotasApp.ADMIN_PAINEL);
@@ -22,7 +40,12 @@ class MenuInferior extends StatelessWidget {
         Get.offNamed(RotasApp.ADMIN_PATRIMONIOS);
         break;
       case 2:
-        Get.offNamed(RotasApp.ADMIN_PROFESSORES);
+        if (Get.isRegistered<AutenticacaoControlador>() &&
+            Get.find<AutenticacaoControlador>().usuarioAtual.value?.eProfessor == true) {
+          Get.offNamed(RotasApp.DOCENTE_MEUS_PATRIMONIOS);
+        } else {
+          Get.offNamed(RotasApp.ADMIN_PROFESSORES);
+        }
         break;
       case 3:
         Get.offNamed(RotasApp.PERFIL);

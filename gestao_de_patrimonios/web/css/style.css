@@ -743,6 +743,71 @@ button {
 
 
 /* =================================
+   INFORMAÇÕES DETALHADAS DO PERFIL
+================================= */
+
+.card-info-perfil {
+    background: white;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    border: 1px solid #e2e8f0;
+}
+
+.card-info-perfil .titulo-secao {
+    font-size: 14px;
+    color: #205988;
+    margin-bottom: 12px;
+    font-weight: 700;
+    border-bottom: 1px solid #edf2f7;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px dashed #edf2f7;
+    font-size: 13px;
+}
+
+.item-info:last-child {
+    border-bottom: none;
+}
+
+.rotulo-info {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.valor-info-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.valor-info {
+    color: #1e293b;
+    font-weight: 600;
+    word-break: break-all;
+    text-align: right;
+}
+
+.btn-toggle-senha {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #205988;
+    padding: 0 4px;
+}
+
+
+/* =================================
    MENU INFERIOR
 ================================= */
 

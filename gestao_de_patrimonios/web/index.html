@@ -34,12 +34,12 @@
             <form>
 
                 <div class="campo">
-                    <label for="email">E-mail</label>
+                    <label for="email">E-mail ou Usuário</label>
 
                     <input
-                        type="email"
+                        type="text"
                         id="email"
-                        placeholder="Digite seu e-mail"
+                        placeholder="Digite seu e-mail ou nome completo"
                     >
                 </div>
 
@@ -116,7 +116,7 @@
 
                     <span>Em uso</span>
 
-                    <strong>84</strong>
+                    <strong id="contador-em-uso">84</strong>
 
                 </article>
 
@@ -124,7 +124,7 @@
 
                     <span>Disponíveis</span>
 
-                    <strong>32</strong>
+                    <strong id="contador-disponiveis">32</strong>
 
                 </article>
 
@@ -205,7 +205,7 @@
                 </div>
 
 
-                <article class="card movimentacao">
+                <article class="card movimentacao" id="movimentacao-notebook">
 
                     <div>
 
@@ -213,7 +213,7 @@
                             Notebook Dell Latitude
                         </h3>
 
-                        <p>
+                        <p id="desc-movimentacao-notebook">
                             Atribuído para Prof. Carlos
                         </p>
 
@@ -357,7 +357,7 @@
 
                     </div>
 
-                    <span class="status em-uso">
+                    <span class="status em-uso" id="status-pat-notebook">
                         Em uso
                     </span>
 
@@ -510,7 +510,7 @@
 
                 </div>
 
-                <span class="quantidade">
+                <span class="quantidade" id="qtd-bens-prof-carlos">
                     4 bens
                 </span>
 
@@ -634,7 +634,7 @@
                     Notebook Dell Latitude
                 </h2>
 
-                <span class="status em-uso">
+                <span class="status em-uso" id="status-detalhes-pat">
                     Em uso
                 </span>
 
@@ -710,7 +710,7 @@
                         RESPONSÁVEL
                     </span>
 
-                    <strong>
+                    <strong id="responsavel-detalhes-pat">
                         Prof. Carlos Drummond
                     </strong>
 
@@ -719,9 +719,15 @@
             </section>
 
 
-            <button class="botao botao-principal">
-                Registrar devolução
-            </button>
+            <div class="acoes-patrimonio" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                <button class="botao botao-principal" id="btn-atribuir-patrimonio" style="display: none; background-color: #2b6cb0;">
+                    Atribuir equipamento
+                </button>
+
+                <button class="botao botao-principal" id="btn-devolver-patrimonio">
+                    Registrar devolução
+                </button>
+            </div>
 
 
             <section>
@@ -735,7 +741,7 @@
                 </div>
 
 
-                <div class="linha-do-tempo">
+                <div class="linha-do-tempo" id="linha-tempo-patrimonio">
 
                     <div class="evento">
 
@@ -814,42 +820,59 @@
 
             <div class="perfil">
 
-                <div class="avatar">
+                <div class="avatar" id="perfil-avatar">
                     CD
                 </div>
 
-                <h1>
+                <h1 id="perfil-nome">
                     Carlos Drummond
                 </h1>
 
-                <p>
+                <p id="perfil-cargo">
                     Professor • Informática
                 </p>
 
             </div>
 
+            <!-- INFORMAÇÕES DO USUÁRIO (COORDENADOR / PROFESSOR) -->
+            <div class="card-info-perfil">
+                <h3 class="titulo-secao">Informações do Perfil</h3>
+
+                <div class="item-info">
+                    <span class="rotulo-info">Nome:</span>
+                    <strong class="valor-info" id="info-nome">Carlos Drummond</strong>
+                </div>
+
+                <div class="item-info">
+                    <span class="rotulo-info">E-mail:</span>
+                    <strong class="valor-info" id="info-email">carlos@escola.edu.br</strong>
+                </div>
+
+                <div class="item-info">
+                    <span class="rotulo-info">Password:</span>
+                    <div class="valor-info-wrapper">
+                        <strong class="valor-info" id="info-password">••••••••</strong>
+                        <button type="button" class="btn-toggle-senha" id="btn-toggle-senha" title="Visualizar senha">👁</button>
+                    </div>
+                </div>
+
+                <div class="item-info">
+                    <span class="rotulo-info">Departamento:</span>
+                    <strong class="valor-info" id="info-departamento">Informática</strong>
+                </div>
+
+                <div class="item-info">
+                    <span class="rotulo-info">Telefone:</span>
+                    <strong class="valor-info" id="info-telefone">(11) 91234-5678</strong>
+                </div>
+
+                <div class="item-info">
+                    <span class="rotulo-info">CPF:</span>
+                    <strong class="valor-info" id="info-cpf">987.654.321-11</strong>
+                </div>
+            </div>
 
             <div class="opcoes-perfil">
-
-                <a href="#" class="opcao">
-                    <span>Dados pessoais</span>
-                    <strong>›</strong>
-                </a>
-
-                <a href="#" class="opcao">
-                    <span>Editar telefone</span>
-                    <strong>›</strong>
-                </a>
-
-                <a href="#" class="opcao">
-                    <span>Alterar senha</span>
-                    <strong>›</strong>
-                </a>
-
-                <a href="#" class="opcao">
-                    <span>Notificações</span>
-                    <strong>›</strong>
-                </a>
 
                 <a href="#" class="opcao sair">
                     <span>Sair da conta</span>
@@ -864,8 +887,18 @@
         <nav class="menu-inferior">
 
             <a href="#" class="menu-item">
+                <span>⌂</span>
+                Início
+            </a>
+
+            <a href="#" class="menu-item">
                 <span>▣</span>
-                Meus bens
+                Patrimônios
+            </a>
+
+            <a href="#" class="menu-item">
+                <span>♙</span>
+                Professores
             </a>
 
             <a href="#" class="menu-item ativo">

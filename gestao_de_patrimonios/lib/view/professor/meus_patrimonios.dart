@@ -5,8 +5,9 @@ import '../../model/patrimonio_modelo.dart';
 import '../widgets/card_patrimonio.dart';
 import '../widgets/cracha_status.dart';
 import '../widgets/estado_vazio.dart';
+import '../widgets/menu_inferior.dart';
 
-/// Visão de Meus Patrimônios (RF08 / RN03) - Painel do Docente com acesso estritamente informativo (apenas leitura).
+/// Visão de Meus Patrimônios com suporte a consulta e devolução de equipamentos.
 class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
   const MeusPatrimoniosView({super.key});
 
@@ -183,10 +184,11 @@ class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
           ),
         ],
       ),
+      bottomNavigationBar: const MenuInferior(indiceAtual: 2),
     );
   }
 
-  /// Exibe modal puramente informativo com os detalhes do patrimônio (RN03 - Apenas Leitura).
+  /// Exibe modal com os detalhes do equipamento e permite registrar a devolução.
   void _exibirDetalhesInformativos(BuildContext context, PatrimonioModelo item) {
     Get.bottomSheet(
       Container(
@@ -237,29 +239,21 @@ class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
                 _LinhaDetalheDocente(rotulo: 'Observações de Conservação', valor: item.descricao!),
 
               const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.lock_clock_outlined, color: Colors.blue.shade700, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Perfil docente em modo apenas leitura. Para solicitar manutenção ou devolução deste item, procure a coordenação da escola.',
-                        style: TextStyle(fontSize: 12, color: Colors.blue.shade900),
-                      ),
-                    ),
-                  ],
+              ElevatedButton.icon(
+                onPressed: () => _confirmarDevolucao(context, item),
+                icon: const Icon(Icons.assignment_return_rounded),
+                label: const Text('Registrar Devolução'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF205988),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size.fromHeight(48),
                 ),
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
+              const SizedBox(height: 10),
+              OutlinedButton(
                 onPressed: () => Get.back(),
-                style: ElevatedButton.styleFrom(
+                style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   minimumSize: const Size.fromHeight(46),
                 ),
@@ -270,6 +264,60 @@ class MeusPatrimoniosView extends GetView<MeusPatrimoniosControlador> {
         ),
       ),
       isScrollControlled: true,
+    );
+  }
+
+  void _confirmarDevolucao(BuildContext context, PatrimonioModelo item) {
+    final motivoController = TextEditingController();
+
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.assignment_return_rounded, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            const Text('Registrar Devolução'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Confirma a devolução do equipamento "${item.nome}" (Tombamento: ${item.numeroTombo})?',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: motivoController,
+              decoration: InputDecoration(
+                labelText: 'Motivo da devolução (opcional)',
+                hintText: 'Ex: Término de projeto / período letivo',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF205988),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Get.back();
+              controller.devolverEquipamento(item, motivoController.text.trim());
+            },
+            child: const Text('Confirmar Devolução'),
+          ),
+        ],
+      ),
     );
   }
 }

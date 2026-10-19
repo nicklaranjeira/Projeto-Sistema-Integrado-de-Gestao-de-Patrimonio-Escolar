@@ -29,6 +29,10 @@ class HistoricoMovimentacaoModelo {
   bool get ehBaixa => tipoMovimentacao.toLowerCase() == 'baixa';
   bool get ehCriacao => tipoMovimentacao.toLowerCase() == 'criacao';
 
+  String get tipo => tipoMovimentacao;
+  String? get motivo => observacoes;
+  String? get usuarioResponsavel => usuarioAcaoNome;
+
   factory HistoricoMovimentacaoModelo.fromJson(Map<String, dynamic> json) {
     return HistoricoMovimentacaoModelo(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
@@ -44,7 +48,7 @@ class HistoricoMovimentacaoModelo {
       usuarioAcaoId: json['usuario_acao_id'] is int
           ? json['usuario_acao_id']
           : int.tryParse(json['usuario_acao_id']?.toString() ?? ''),
-      usuarioAcaoNome: json['usuario_acao_nome'] ?? json['usuario_nome'],
+      usuarioAcaoNome: json['usuario_responsavel'] ?? json['usuario_acao_nome'] ?? json['usuario_nome'],
       observacoes: json['observacoes'] ?? json['motivo'],
       dataHora: json['data_hora'] != null
           ? (DateTime.tryParse(json['data_hora']) ?? DateTime.now())

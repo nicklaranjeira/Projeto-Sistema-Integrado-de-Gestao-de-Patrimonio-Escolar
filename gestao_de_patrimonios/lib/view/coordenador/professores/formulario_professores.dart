@@ -127,7 +127,7 @@ class FormularioProfessorView extends GetView<ProfessorControlador> {
                       CampoTextoPersonalizado(
                         controlador: controller.matriculaController,
                         rotulo: 'Matrícula Institucional *',
-                        dica: 'Ex: MAT-2026-44',
+                        dica: 'Ex: 202644 ou MAT-2026-44',
                         iconePrefixo: Icons.badge_outlined,
                         validador: (v) {
                           if (v == null || v.trim().isEmpty) {
@@ -135,6 +135,51 @@ class FormularioProfessorView extends GetView<ProfessorControlador> {
                           }
                           return null;
                         },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Credenciais de Acesso (Usuário e Senha)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.key_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Credenciais de Acesso Institucional',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1E293B)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            CampoTextoPersonalizado(
+                              controlador: controller.usuarioAcessoController,
+                              rotulo: 'Usuário (Nome completo para login)',
+                              dica: 'Gerado automaticamente pelo nome',
+                              iconePrefixo: Icons.account_circle_outlined,
+                            ),
+                            const SizedBox(height: 10),
+                            CampoTextoPersonalizado(
+                              controlador: controller.senhaAcessoController,
+                              rotulo: 'Senha (Matrícula + 02)',
+                              dica: 'Ex: 20264402',
+                              iconePrefixo: Icons.lock_outline_rounded,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '• Usuário: Nome completo | Senha: Número da matrícula + 02 (identificador de professor)',
+                              style: TextStyle(fontSize: 11, color: Colors.blueGrey.shade700),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
 

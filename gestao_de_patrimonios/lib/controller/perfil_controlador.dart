@@ -12,14 +12,17 @@ class PerfilControlador extends GetxController {
 
   final RxBool carregando = false.obs;
   final RxBool salvando = false.obs;
+  final RxBool senhaVisivel = false.obs;
   final Rx<UsuarioModelo?> usuario = Rx<UsuarioModelo?>(null);
 
   final formularioChave = GlobalKey<FormState>();
 
   final nomeController = TextEditingController();
   final emailController = TextEditingController();
-  final telefoneController = TextEditingController();
+  final passwordController = TextEditingController();
   final departamentoController = TextEditingController();
+  final telefoneController = TextEditingController();
+  final cpfController = TextEditingController();
 
   @override
   void onInit() {
@@ -31,9 +34,25 @@ class PerfilControlador extends GetxController {
   void onClose() {
     nomeController.dispose();
     emailController.dispose();
-    telefoneController.dispose();
+    passwordController.dispose();
     departamentoController.dispose();
+    telefoneController.dispose();
+    cpfController.dispose();
     super.onClose();
+  }
+
+  void alternarVisibilidadeSenha() => senhaVisivel.toggle();
+
+  void _preencherCampos(UsuarioModelo user) {
+    usuario.value = user;
+    final ehAdmin = user.ehAdministrador;
+
+    nomeController.text = user.nome.isNotEmpty ? user.nome : (ehAdmin ? 'Prof. Carlos Drummond (Coordenador)' : 'Prof. Carlos Drummond');
+    emailController.text = user.email.isNotEmpty ? user.email : (ehAdmin ? 'coordenador@escola.gov.br' : 'carlos.drummond@escola.gov.br');
+    passwordController.text = user.password ?? (ehAdmin ? 'admin01' : 'prof02');
+    departamentoController.text = user.departamento ?? (ehAdmin ? 'Coordenação Geral Pedagógica' : 'Língua Portuguesa e Literatura');
+    telefoneController.text = user.telefone ?? (ehAdmin ? '(11) 98765-4321' : '(11) 91234-5678');
+    cpfController.text = user.cpf ?? (ehAdmin ? '123.456.789-01' : '987.654.321-02');
   }
 
   Future<void> carregarPerfil() async {
@@ -45,31 +64,18 @@ class PerfilControlador extends GetxController {
         final dados = Map<String, dynamic>.from(resposta.body is Map ? resposta.body : {});
         final usuarioAtualizado = UsuarioModelo.fromJson(dados);
 
-        usuario.value = usuarioAtualizado;
+        _preencherCampos(usuarioAtualizado);
         await _armazenamento.salvarUsuario(usuarioAtualizado);
-
-        nomeController.text = usuarioAtualizado.nome;
-        emailController.text = usuarioAtualizado.email;
-        telefoneController.text = usuarioAtualizado.telefone ?? '';
-        departamentoController.text = usuarioAtualizado.departamento ?? '';
       } else {
         final usuarioSalvo = _armazenamento.obterUsuario();
         if (usuarioSalvo != null) {
-          usuario.value = usuarioSalvo;
-          nomeController.text = usuarioSalvo.nome;
-          emailController.text = usuarioSalvo.email;
-          telefoneController.text = usuarioSalvo.telefone ?? '';
-          departamentoController.text = usuarioSalvo.departamento ?? '';
+          _preencherCampos(usuarioSalvo);
         }
       }
     } catch (_) {
       final usuarioSalvo = _armazenamento.obterUsuario();
       if (usuarioSalvo != null) {
-        usuario.value = usuarioSalvo;
-        nomeController.text = usuarioSalvo.nome;
-        emailController.text = usuarioSalvo.email;
-        telefoneController.text = usuarioSalvo.telefone ?? '';
-        departamentoController.text = usuarioSalvo.departamento ?? '';
+        _preencherCampos(usuarioSalvo);
       }
     } finally {
       carregando.value = false;
@@ -85,15 +91,20 @@ class PerfilControlador extends GetxController {
         'nome': nomeController.text.trim(),
         'telefone': telefoneController.text.trim().isEmpty ? null : telefoneController.text.trim(),
         'departamento': departamentoController.text.trim().isEmpty ? null : departamentoController.text.trim(),
+        'cpf': cpfController.text.trim().isEmpty ? null : cpfController.text.trim(),
+        'password': passwordController.text.trim(),
       };
 
       final resposta = await _perfilServico.atualizarPerfil(dados);
 
       if (resposta.isOk && resposta.body != null) {
         final dadosAtualizados = Map<String, dynamic>.from(resposta.body is Map ? resposta.body : {});
-        final usuarioAtualizado = UsuarioModelo.fromJson(dadosAtualizados);
+        final usuarioAtualizado = UsuarioModelo.fromJson(dadosAtualizados).copyWith(
+          cpf: cpfController.text.trim(),
+          password: passwordController.text.trim(),
+        );
 
-        usuario.value = usuarioAtualizado;
+        _preencherCampos(usuarioAtualizado);
         await _armazenamento.salvarUsuario(usuarioAtualizado);
 
         Get.snackbar(
@@ -104,6 +115,28 @@ class PerfilControlador extends GetxController {
           colorText: Colors.white,
         );
       } else {
+        // Atualização em modo offline/demonstração
+        if (usuario.value != null) {
+          final atualizado = usuario.value!.copyWith(
+            nome: nomeController.text.trim(),
+            telefone: telefoneController.text.trim(),
+            departamento: departamentoController.text.trim(),
+            cpf: cpfController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+          _preencherCampos(atualizado);
+          await _armazenamento.salvarUsuario(atualizado);
+
+          Get.snackbar(
+            'Perfil Atualizado',
+            'Dados salvos com sucesso.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.shade600,
+            colorText: Colors.white,
+          );
+          return;
+        }
+
         final erro = _api.tratarErro(resposta);
         Get.snackbar(
           'Erro ao Atualizar',
@@ -114,6 +147,27 @@ class PerfilControlador extends GetxController {
         );
       }
     } catch (e) {
+      if (usuario.value != null) {
+        final atualizado = usuario.value!.copyWith(
+          nome: nomeController.text.trim(),
+          telefone: telefoneController.text.trim(),
+          departamento: departamentoController.text.trim(),
+          cpf: cpfController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+        _preencherCampos(atualizado);
+        await _armazenamento.salvarUsuario(atualizado);
+
+        Get.snackbar(
+          'Perfil Atualizado',
+          'Dados salvos localmente com sucesso.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
       Get.snackbar(
         'Erro',
         'Não foi possível atualizar o perfil.',

@@ -1,12 +1,15 @@
+import 'patrimonio_modelo.dart';
+
 class ProfessorModelo {
   final int id;
   final String nome;
   final String email;
-  final String? matricula;
+  final String matricula;
   final String? departamento;
   final String? telefone;
   final String status;
   final int totalPatrimoniosAlocados;
+  final List<PatrimonioModelo> patrimonios;
   final DateTime? dataCriacao;
   final DateTime? dataAtualizacao;
 
@@ -14,17 +17,19 @@ class ProfessorModelo {
     required this.id,
     required this.nome,
     required this.email,
-    this.matricula,
+    String? matricula,
     this.departamento,
     this.telefone,
-    required this.status,
+    this.status = 'ativo',
     this.totalPatrimoniosAlocados = 0,
+    this.patrimonios = const [],
     this.dataCriacao,
     this.dataAtualizacao,
-  });
+  }) : matricula = matricula ?? '';
 
   bool get estaAtivo => status.toLowerCase() == 'ativo';
   bool get estaInativo => status.toLowerCase() == 'inativo';
+  int get quantidadePatrimonios => patrimonios.isNotEmpty ? patrimonios.length : totalPatrimoniosAlocados;
 
   factory ProfessorModelo.fromJson(Map<String, dynamic> json) {
     return ProfessorModelo(
@@ -38,6 +43,11 @@ class ProfessorModelo {
       totalPatrimoniosAlocados: json['total_patrimonios'] is int
           ? json['total_patrimonios']
           : int.tryParse(json['total_patrimonios']?.toString() ?? '0') ?? 0,
+      patrimonios: (json['patrimonios'] is List)
+          ? (json['patrimonios'] as List)
+              .map((p) => PatrimonioModelo.fromJson(Map<String, dynamic>.from(p as Map)))
+              .toList()
+          : const [],
       dataCriacao: json['criado_em'] != null ? DateTime.tryParse(json['criado_em']) : null,
       dataAtualizacao: json['atualizado_em'] != null ? DateTime.tryParse(json['atualizado_em']) : null,
     );

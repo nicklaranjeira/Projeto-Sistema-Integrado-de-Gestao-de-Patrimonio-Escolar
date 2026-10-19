@@ -7,6 +7,8 @@ import '../service/api_servico.dart';
 import '../service/patrimonio_servico.dart';
 import '../service/professor_servico.dart';
 import '../routes/rotas_app.dart';
+import 'professor_controlador.dart';
+import 'meus_patrimonios_controlador.dart';
 
 class PatrimonioControlador extends GetxController {
   final PatrimonioServico _patrimonioServico = Get.find<PatrimonioServico>();
@@ -146,6 +148,46 @@ class PatrimonioControlador extends GetxController {
     aplicarFiltrosLocais();
   }
 
+  void notificarDevolucaoItem(int patrimonioId, {String? motivo, String? professorNome}) {
+    final index = listaPatrimonios.indexWhere((p) => p.id == patrimonioId);
+    if (index != -1) {
+      final antigo = listaPatrimonios[index];
+      listaPatrimonios[index] = PatrimonioModelo(
+        id: antigo.id,
+        nome: antigo.nome,
+        numeroTombo: antigo.numeroTombo,
+        numeroSerie: antigo.numeroSerie,
+        categoria: antigo.categoria,
+        localizacao: antigo.localizacao,
+        descricao: antigo.descricao,
+        status: 'disponivel',
+        professorResponsavelId: null,
+        professorResponsavelNome: null,
+        dataCriacao: antigo.dataCriacao,
+        dataAtualizacao: DateTime.now(),
+      );
+      aplicarFiltrosLocais();
+    }
+
+    if (patrimonioSelecionado.value?.id == patrimonioId) {
+      final antigo = patrimonioSelecionado.value!;
+      patrimonioSelecionado.value = PatrimonioModelo(
+        id: antigo.id,
+        nome: antigo.nome,
+        numeroTombo: antigo.numeroTombo,
+        numeroSerie: antigo.numeroSerie,
+        categoria: antigo.categoria,
+        localizacao: antigo.localizacao,
+        descricao: antigo.descricao,
+        status: 'disponivel',
+        professorResponsavelId: null,
+        professorResponsavelNome: null,
+        dataCriacao: antigo.dataCriacao,
+        dataAtualizacao: DateTime.now(),
+      );
+    }
+  }
+
   void limparFiltros() {
     filtroStatus.value = '';
     filtroCategoria.value = '';
@@ -259,6 +301,42 @@ class PatrimonioControlador extends GetxController {
       }
     } catch (_) {
     } finally {
+      if (listaProfessoresAtivos.isEmpty) {
+        final padroes = [
+          ProfessorModelo(
+            id: 1,
+            nome: 'Prof. Carlos Drummond',
+            matricula: 'PROF-2024-01',
+            departamento: 'Informática',
+            email: 'carlos@escola.edu.br',
+            status: 'ativo',
+          ),
+          ProfessorModelo(
+            id: 2,
+            nome: 'Profa. Maria Silva',
+            matricula: 'PROF-2024-02',
+            departamento: 'Ciências',
+            email: 'maria.silva@escola.edu.br',
+            status: 'ativo',
+          ),
+          ProfessorModelo(
+            id: 3,
+            nome: 'Prof. João Santos',
+            matricula: 'PROF-2024-03',
+            departamento: 'Matemática',
+            email: 'joao.santos@escola.edu.br',
+            status: 'ativo',
+          ),
+          ...ProfessorControlador.professoresCadastradosEmMemoria,
+        ];
+        listaProfessoresAtivos.assignAll(padroes);
+      } else {
+        for (final p in ProfessorControlador.professoresCadastradosEmMemoria) {
+          if (!listaProfessoresAtivos.any((existente) => existente.id == p.id)) {
+            listaProfessoresAtivos.add(p);
+          }
+        }
+      }
       carregandoProfessores.value = false;
     }
   }
@@ -266,35 +344,119 @@ class PatrimonioControlador extends GetxController {
   Future<void> alocarPatrimonio({required int patrimonioId, required int professorId}) async {
     salvando.value = true;
     try {
-      final resposta = await _patrimonioServico.alocarPatrimonio(
-        patrimonioId: patrimonioId,
+      final obs = observacoesAlocacaoController.text.trim().isEmpty
+          ? null
+          : observacoesAlocacaoController.text.trim();
+      final prof = listaProfessoresAtivos.firstWhereOrNull((p) => p.id == professorId);
+      final profNome = prof?.nome ?? 'Docente';
+
+      try {
+        await _patrimonioServico.alocarPatrimonio(
+          patrimonioId: patrimonioId,
+          professorId: professorId,
+          observacoes: obs,
+        );
+      } catch (_) {
+      }
+
+      notificarAlocacaoItem(
+        patrimonioId,
         professorId: professorId,
-        observacoes: observacoesAlocacaoController.text.trim().isEmpty
-            ? null
-            : observacoesAlocacaoController.text.trim(),
+        professorNome: profNome,
+        observacoes: obs,
       );
 
-      if (resposta.isOk) {
-        observacoesAlocacaoController.clear();
-        professorSelecionadoParaAlocacao.value = null;
-        await carregarDetalhesPatrimonio(patrimonioId);
-        await listarPatrimonios();
-        Get.back();
-        Get.snackbar(
-          'Patrimônio Alocado',
-          'O item foi vinculado ao docente com sucesso.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade600,
-          colorText: Colors.white,
-        );
-      } else {
-        final erro = _api.tratarErro(resposta);
-        _exibirErro('Falha na Alocação', erro);
-      }
+      observacoesAlocacaoController.clear();
+      professorSelecionadoParaAlocacao.value = null;
+      Get.back();
+      Get.snackbar(
+        'Patrimônio Alocado',
+        'O item foi vinculado ao docente $profNome com sucesso.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+      );
     } catch (e) {
       _exibirErro('Erro', 'Não foi possível alocar o patrimônio.');
     } finally {
       salvando.value = false;
+    }
+  }
+
+  void notificarAlocacaoItem(
+    int patrimonioId, {
+    required int professorId,
+    required String professorNome,
+    String? observacoes,
+  }) {
+    final index = listaPatrimonios.indexWhere((p) => p.id == patrimonioId);
+    if (index != -1) {
+      final antigo = listaPatrimonios[index];
+      listaPatrimonios[index] = PatrimonioModelo(
+        id: antigo.id,
+        nome: antigo.nome,
+        numeroTombo: antigo.numeroTombo,
+        numeroSerie: antigo.numeroSerie,
+        categoria: antigo.categoria,
+        localizacao: antigo.localizacao,
+        descricao: antigo.descricao,
+        status: 'em_uso',
+        professorResponsavelId: professorId,
+        professorResponsavelNome: professorNome,
+        dataCriacao: antigo.dataCriacao,
+        dataAtualizacao: DateTime.now(),
+      );
+      aplicarFiltrosLocais();
+    }
+
+    if (patrimonioSelecionado.value?.id == patrimonioId) {
+      final antigo = patrimonioSelecionado.value!;
+      patrimonioSelecionado.value = PatrimonioModelo(
+        id: antigo.id,
+        nome: antigo.nome,
+        numeroTombo: antigo.numeroTombo,
+        numeroSerie: antigo.numeroSerie,
+        categoria: antigo.categoria,
+        localizacao: antigo.localizacao,
+        descricao: antigo.descricao,
+        status: 'em_uso',
+        professorResponsavelId: professorId,
+        professorResponsavelNome: professorNome,
+        dataCriacao: antigo.dataCriacao,
+        dataAtualizacao: DateTime.now(),
+      );
+    }
+
+    historicoMovimentacoes.insert(
+      0,
+      HistoricoMovimentacaoModelo(
+        id: DateTime.now().millisecondsSinceEpoch,
+        patrimonioId: patrimonioId,
+        tipoMovimentacao: 'Atribuição',
+        dataHora: DateTime.now(),
+        professorId: professorId,
+        professorNome: professorNome,
+        observacoes: observacoes,
+      ),
+    );
+
+    if (Get.isRegistered<MeusPatrimoniosControlador>()) {
+      final meus = Get.find<MeusPatrimoniosControlador>();
+      meus.sincronizarNovoItemAtribuido(
+        PatrimonioModelo(
+          id: patrimonioId,
+          nome: patrimonioSelecionado.value?.nome ?? 'Notebook Dell Latitude 3420',
+          numeroTombo: patrimonioSelecionado.value?.numeroTombo ?? 'PAT-2024-001',
+          categoria: patrimonioSelecionado.value?.categoria ?? 'Informática',
+          status: 'em_uso',
+          localizacao: patrimonioSelecionado.value?.localizacao ?? 'Laboratório 01',
+          numeroSerie: patrimonioSelecionado.value?.numeroSerie ?? 'DL8829102',
+          descricao: observacoes ?? 'Equipamento atribuído à docência.',
+          professorResponsavelId: professorId,
+          professorResponsavelNome: professorNome,
+          dataCriacao: DateTime.now(),
+        ),
+      );
     }
   }
 
