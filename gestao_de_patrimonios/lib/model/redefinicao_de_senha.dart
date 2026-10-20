@@ -1,3 +1,4 @@
+/// Etapa 1 da recuperação de senha: envio do e-mail para geração do código (RF03).
 class ForgotPassword {
   final String email;
 
@@ -12,6 +13,7 @@ class ForgotPassword {
   }
 }
 
+/// Etapa 2 da recuperação de senha: verificação do código de 6 dígitos (RF03).
 class VerifyCode {
   final String email;
   final String code;
@@ -27,6 +29,7 @@ class VerifyCode {
   }
 }
 
+/// Etapa 3 da recuperação de senha: envio do código com a nova senha (RF03).
 class ResetPassword {
   final String email;
   final String code;
