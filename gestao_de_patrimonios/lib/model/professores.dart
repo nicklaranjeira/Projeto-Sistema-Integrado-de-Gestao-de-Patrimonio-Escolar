@@ -1,3 +1,4 @@
+/// Modelo complementar de Professores (RF06) para integração com a camada de serviço legada.
 class Professores {
   final String nome;
   final String email;

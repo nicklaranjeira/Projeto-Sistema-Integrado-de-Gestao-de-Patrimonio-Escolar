@@ -1,3 +1,4 @@
+/// Modelo complementar de Patrimônios (RF07) para serialização e integração com a camada de serviço legada.
 class Patrimonios {
   final String codigo;
   final String nome;
