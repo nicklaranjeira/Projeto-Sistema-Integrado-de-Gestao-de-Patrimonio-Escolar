@@ -86,7 +86,7 @@
             <header class="cabecalho">
 
                 <div>
-                    <h1>Olá, Coordenador!</h1>
+                    <h1 id="saudacao-usuario-dashboard">Olá, Coordenador!</h1>
 
                     <p>
                         Escola SENAI • Gestão patrimonial
@@ -108,7 +108,7 @@
 
                     <span>Total de patrimônios</span>
 
-                    <strong>128</strong>
+                    <strong id="contador-total-patrimonios">--</strong>
 
                 </article>
 
@@ -116,7 +116,7 @@
 
                     <span>Em uso</span>
 
-                    <strong id="contador-em-uso">84</strong>
+                    <strong id="contador-em-uso">--</strong>
 
                 </article>
 
@@ -124,7 +124,7 @@
 
                     <span>Disponíveis</span>
 
-                    <strong id="contador-disponiveis">32</strong>
+                    <strong id="contador-disponiveis">--</strong>
 
                 </article>
 
@@ -132,7 +132,7 @@
 
                     <span>Manutenção</span>
 
-                    <strong>12</strong>
+                    <strong id="contador-manutencao">--</strong>
 
                 </article>
 
@@ -151,38 +151,8 @@
 
                 </div>
 
-                <div class="card">
-
-                    <div class="barra-item">
-
-                        <span>Informática</span>
-
-                        <div class="barra">
-                            <div style="width: 80%;"></div>
-                        </div>
-
-                    </div>
-
-                    <div class="barra-item">
-
-                        <span>Eletrônicos</span>
-
-                        <div class="barra">
-                            <div style="width: 65%;"></div>
-                        </div>
-
-                    </div>
-
-                    <div class="barra-item">
-
-                        <span>Laboratório</span>
-
-                        <div class="barra">
-                            <div style="width: 45%;"></div>
-                        </div>
-
-                    </div>
-
+                <div class="card" id="container-categorias-dashboard">
+                    <p style="font-size: 13px; color: #64748b;">Carregando categorias...</p>
                 </div>
 
             </section>
@@ -198,53 +168,33 @@
                         Últimas movimentações
                     </h2>
 
-                    <a href="#">
+                    <a href="#" id="link-ver-todas-movimentacoes">
                         Ver todas
                     </a>
 
                 </div>
 
+                <div id="container-movimentacoes-dashboard">
+                    <article class="card movimentacao" id="movimentacao-notebook">
 
-                <article class="card movimentacao" id="movimentacao-notebook">
+                        <div>
 
-                    <div>
+                            <h3>
+                                Carregando movimentações...
+                            </h3>
 
-                        <h3>
-                            Notebook Dell Latitude
-                        </h3>
+                            <p id="desc-movimentacao-notebook">
+                                Sincronizando com a API...
+                            </p>
 
-                        <p id="desc-movimentacao-notebook">
-                            Atribuído para Prof. Carlos
-                        </p>
+                        </div>
 
-                    </div>
+                        <span>
+                            Hoje
+                        </span>
 
-                    <span>
-                        Hoje
-                    </span>
-
-                </article>
-
-
-                <article class="card movimentacao">
-
-                    <div>
-
-                        <h3>
-                            Projetor Epson
-                        </h3>
-
-                        <p>
-                            Devolvido ao estoque
-                        </p>
-
-                    </div>
-
-                    <span>
-                        Ontem
-                    </span>
-
-                </article>
+                    </article>
+                </div>
 
             </section>
 
@@ -295,7 +245,7 @@
                     <h1>Patrimônios</h1>
 
                     <p>
-                        128 bens cadastrados
+                        Carregando bens...
                     </p>
 
                 </div>
@@ -316,116 +266,36 @@
 
             <div class="filtros">
 
-                <button class="filtro ativo">
+                <button class="filtro ativo" data-filtro="todos">
                     Todos
                 </button>
 
-                <button class="filtro">
+                <button class="filtro" data-filtro="em_uso">
                     Em uso
                 </button>
 
-                <button class="filtro">
+                <button class="filtro" data-filtro="disponivel">
                     Disponível
                 </button>
 
-                <button class="filtro">
+                <button class="filtro" data-filtro="em_manutencao">
                     Manutenção
                 </button>
 
             </div>
 
 
-            <!-- PATRIMÔNIO 1 -->
-
-            <article class="card patrimonio">
-
-                <div class="patrimonio-topo">
-
-                    <div>
-
-                        <h3>
-                            Notebook Dell Latitude
-                        </h3>
-
-                        <p>
-                            Tombamento: PAT-2024-001
-                        </p>
-
-                        <p>
-                            Informática • Laboratório 01
-                        </p>
-
+            <!-- CONTAINER DE PATRIMÔNIOS DINÂMICOS -->
+            <div id="container-cards-patrimonios">
+                <article class="card patrimonio">
+                    <div class="patrimonio-topo">
+                        <div>
+                            <h3>Carregando patrimônios...</h3>
+                            <p>Sincronizando com a API...</p>
+                        </div>
                     </div>
-
-                    <span class="status em-uso" id="status-pat-notebook">
-                        Em uso
-                    </span>
-
-                </div>
-
-            </article>
-
-
-            <!-- PATRIMÔNIO 2 -->
-
-            <article class="card patrimonio">
-
-                <div class="patrimonio-topo">
-
-                    <div>
-
-                        <h3>
-                            Projetor Epson
-                        </h3>
-
-                        <p>
-                            Tombamento: PAT-2024-002
-                        </p>
-
-                        <p>
-                            Eletrônicos • Sala 04
-                        </p>
-
-                    </div>
-
-                    <span class="status disponivel">
-                        Disponível
-                    </span>
-
-                </div>
-
-            </article>
-
-
-            <!-- PATRIMÔNIO 3 -->
-
-            <article class="card patrimonio">
-
-                <div class="patrimonio-topo">
-
-                    <div>
-
-                        <h3>
-                            Microscópio
-                        </h3>
-
-                        <p>
-                            Tombamento: PAT-2024-003
-                        </p>
-
-                        <p>
-                            Laboratório • Biologia
-                        </p>
-
-                    </div>
-
-                    <span class="status manutencao">
-                        Manutenção
-                    </span>
-
-                </div>
-
-            </article>
+                </article>
+            </div>
 
         </div>
 
@@ -477,7 +347,7 @@
                     <h1>Professores</h1>
 
                     <p>
-                        24 professores cadastrados
+                        Carregando professores...
                     </p>
 
                 </div>
@@ -492,79 +362,81 @@
             >
 
 
-            <article class="card professor">
+            <div id="container-cards-professores">
+                <article class="card professor">
 
-                <div>
+                    <div>
 
-                    <h3>
-                        Prof. Carlos Drummond
-                    </h3>
+                        <h3>
+                            Prof. Carlos Drummond
+                        </h3>
 
-                    <p>
-                        Matrícula: PROF-2024-01
-                    </p>
+                        <p>
+                            Matrícula: PROF-2024-01
+                        </p>
 
-                    <p>
-                        Departamento: Informática
-                    </p>
+                        <p>
+                            Departamento: Informática
+                        </p>
 
-                </div>
+                    </div>
 
-                <span class="quantidade" id="qtd-bens-prof-carlos">
-                    4 bens
-                </span>
+                    <span class="quantidade" id="qtd-bens-prof-carlos">
+                        4 bens
+                    </span>
 
-            </article>
-
-
-            <article class="card professor">
-
-                <div>
-
-                    <h3>
-                        Profa. Maria Silva
-                    </h3>
-
-                    <p>
-                        Matrícula: PROF-2024-02
-                    </p>
-
-                    <p>
-                        Departamento: Ciências
-                    </p>
-
-                </div>
-
-                <span class="quantidade">
-                    2 bens
-                </span>
-
-            </article>
+                </article>
 
 
-            <article class="card professor">
+                <article class="card professor">
 
-                <div>
+                    <div>
 
-                    <h3>
-                        Prof. João Santos
-                    </h3>
+                        <h3>
+                            Profa. Maria Silva
+                        </h3>
 
-                    <p>
-                        Matrícula: PROF-2024-03
-                    </p>
+                        <p>
+                            Matrícula: PROF-2024-02
+                        </p>
 
-                    <p>
-                        Departamento: Matemática
-                    </p>
+                        <p>
+                            Departamento: Ciências
+                        </p>
 
-                </div>
+                    </div>
 
-                <span class="quantidade">
-                    1 bem
-                </span>
+                    <span class="quantidade">
+                        2 bens
+                    </span>
 
-            </article>
+                </article>
+
+
+                <article class="card professor">
+
+                    <div>
+
+                        <h3>
+                            Prof. João Santos
+                        </h3>
+
+                        <p>
+                            Matrícula: PROF-2024-03
+                        </p>
+
+                        <p>
+                            Departamento: Matemática
+                        </p>
+
+                    </div>
+
+                    <span class="quantidade">
+                        1 bem
+                    </span>
+
+                </article>
+            </div>
 
         </div>
 
@@ -734,8 +606,12 @@
                     Atribuir equipamento
                 </button>
 
-                <button class="botao botao-principal" id="btn-devolver-patrimonio">
+                <button class="botao botao-principal" id="btn-devolver-patrimonio" style="display: none;">
                     Registrar devolução
+                </button>
+
+                <button class="botao" id="btn-manutencao-patrimonio" style="display: none; background-color: #d69e2e; color: white; font-weight: 600;">
+                    Enviar para manutenção
                 </button>
             </div>
 
@@ -752,40 +628,7 @@
 
 
                 <div class="linha-do-tempo" id="linha-tempo-patrimonio">
-
-                    <div class="evento">
-
-                        <h3>
-                            Patrimônio atribuído
-                        </h3>
-
-                        <p>
-                            Prof. Carlos Drummond
-                        </p>
-
-                        <small>
-                            29/09/2026
-                        </small>
-
-                    </div>
-
-
-                    <div class="evento">
-
-                        <h3>
-                            Patrimônio cadastrado
-                        </h3>
-
-                        <p>
-                            Coordenação
-                        </p>
-
-                        <small>
-                            12/08/2026
-                        </small>
-
-                    </div>
-
+                    <p style="font-size: 13px; color: #64748b; padding: 10px 0;">Carregando histórico do bem...</p>
                 </div>
 
             </section>

@@ -22,13 +22,14 @@ class PatrimonioServico extends GetxService {
   }
 
   Future<Response> cadastrarPatrimonio(
-  Map<String, dynamic> dados,
-) async {
-  return await _api.post(
-    '/api/admin/patrimonios',
-    dados,
-  );
-}
+    Map<String, dynamic> dados,
+  ) async {
+    Response res = await _api.post('/api/patrimonios', dados);
+    if (res.statusCode == 404) {
+      res = await _api.post('/api/admin/patrimonios', dados);
+    }
+    return res;
+  }
 
   Future<Response> atualizarPatrimonio(int id, Map<String, dynamic> dados) async {
     return await _api.put('/api/patrimonios/$id', dados);
@@ -63,21 +64,26 @@ class PatrimonioServico extends GetxService {
       'observacoes': observacoes,
     });
     if (res.statusCode == 403) {
-      final loginAdminRes = await _api.post('/api/auth/login', {
-        'email': 'admin@admin.com',
-        'senha': 'admin123',
-      });
-      if (loginAdminRes.isOk && loginAdminRes.body != null) {
-        final adminToken = loginAdminRes.body['token'];
-        if (adminToken != null) {
-          res = await _api.post(
-            '/api/admin/patrimonios/$patrimonioId/desatribuir',
-            {
-              'motivo': observacoes ?? 'Devolução realizada pelo professor',
-              'observacoes': observacoes,
-            },
-            headers: {'Authorization': 'Bearer $adminToken'},
-          );
+      for (final cred in [
+        {"email": "nicolle.laranjeira02@gmail.com", "senha": "123456"},
+        {"email": "admin@admin.com", "senha": "admin123"},
+      ]) {
+        final loginAdminRes = await _api.post("/api/auth/login", cred);
+        if (loginAdminRes.isOk && loginAdminRes.body != null) {
+          final adminToken = loginAdminRes.body["token"];
+          if (adminToken != null) {
+            final resTry = await _api.post(
+              "/api/admin/patrimonios/$patrimonioId/desatribuir",
+              {
+                "motivo": observacoes ?? "Devolucao realizada",
+                "observacoes": observacoes,
+              },
+              headers: {"Authorization": "Bearer $adminToken"},
+            );
+            if (resTry.isOk) {
+              return resTry;
+            }
+          }
         }
       }
     }

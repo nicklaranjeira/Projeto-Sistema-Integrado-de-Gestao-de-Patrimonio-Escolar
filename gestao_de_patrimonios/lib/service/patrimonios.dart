@@ -54,13 +54,14 @@ class PatrimoniosService extends GetConnect {
     httpClient.baseUrl = novaUrl;
   }
 
-  /// Tenta a requisição na rota principal (/api/v1/...) e, se der 404, faz fallback para rota sem prefixo
+  /// Tenta a requisição na rota principal (/api/v1/...) e, se der 404, faz fallback para /api/... e rota sem prefixo
   Future<Response> _requisicaoComFallback({
     required String metodo,
     required String rotaPrincipal,
     dynamic corpo,
     Map<String, dynamic>? query,
   }) async {
+    final rotaApi = rotaPrincipal.replaceFirst('/api/v1', '/api');
     final rotaAlternativa = rotaPrincipal.replaceFirst('/api/v1', '');
 
     Response res;
@@ -68,11 +69,17 @@ class PatrimoniosService extends GetConnect {
       case 'GET':
         res = await get(rotaPrincipal, query: query);
         if (res.statusCode == 404) {
+          res = await get(rotaApi, query: query);
+        }
+        if (res.statusCode == 404) {
           res = await get(rotaAlternativa, query: query);
         }
         break;
       case 'POST':
         res = await post(rotaPrincipal, corpo);
+        if (res.statusCode == 404) {
+          res = await post(rotaApi, corpo);
+        }
         if (res.statusCode == 404) {
           res = await post(rotaAlternativa, corpo);
         }
@@ -80,11 +87,17 @@ class PatrimoniosService extends GetConnect {
       case 'PUT':
         res = await put(rotaPrincipal, corpo);
         if (res.statusCode == 404) {
+          res = await put(rotaApi, corpo);
+        }
+        if (res.statusCode == 404) {
           res = await put(rotaAlternativa, corpo);
         }
         break;
       case 'DELETE':
         res = await delete(rotaPrincipal);
+        if (res.statusCode == 404) {
+          res = await delete(rotaApi);
+        }
         if (res.statusCode == 404) {
           res = await delete(rotaAlternativa);
         }
@@ -201,7 +214,9 @@ class PatrimoniosService extends GetConnect {
     if (body is List) {
       listaJson = body;
     } else if (body is Map) {
-      if (body['data'] is Map && body['data']['patrimonios'] is List) {
+      if (body['items'] is List) {
+        listaJson = body['items'] as List<dynamic>;
+      } else if (body['data'] is Map && body['data']['patrimonios'] is List) {
         listaJson = body['data']['patrimonios'] as List<dynamic>;
       } else if (body['data'] is List) {
         listaJson = body['data'] as List<dynamic>;
@@ -240,6 +255,8 @@ class PatrimoniosService extends GetConnect {
     if (body is Map) {
       if (body['data'] is Map) {
         itemMap = Map<String, dynamic>.from(body['data'] as Map);
+      } else if (body['item'] is Map) {
+        itemMap = Map<String, dynamic>.from(body['item'] as Map);
       } else {
         itemMap = Map<String, dynamic>.from(body);
       }
