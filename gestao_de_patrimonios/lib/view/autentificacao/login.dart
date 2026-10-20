@@ -159,16 +159,16 @@ class LoginView extends GetView<AutenticacaoControlador> {
                           ),
                           const SizedBox(height: 8),
 
-                          // Link Esqueci minha senha
+                          // Link Redefinir senha
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => Get.toNamed(RotasApp.ESQUECI_SENHA),
+                              onPressed: () => Get.toNamed(RotasApp.REDEFINIR_SENHA),
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                               ),
                               child: Text(
-                                'Esqueceu a senha?',
+                                'Redefinir senha',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,

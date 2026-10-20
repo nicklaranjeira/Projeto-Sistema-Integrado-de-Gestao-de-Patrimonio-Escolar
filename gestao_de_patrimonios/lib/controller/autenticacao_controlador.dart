@@ -239,12 +239,22 @@ class AutenticacaoControlador extends GetxController {
     }
   }
 
-  Future<void> solicitarRecuperacaoSenha() async {
-    if (!formularioEsqueciSenhaChave.currentState!.validate()) return;
+  Future<void> solicitarRecuperacaoSenha([String? emailAlvo]) async {
+    final email = (emailAlvo != null && emailAlvo.trim().isNotEmpty)
+        ? emailAlvo.trim()
+        : emailController.text.trim();
+
+    if (email.isEmpty) {
+      _exibirMensagemErro('Validação', 'Por favor, informe seu e-mail cadastrado.');
+      return;
+    }
+    if (!GetUtils.isEmail(email)) {
+      _exibirMensagemErro('Validação', 'Por favor, informe um formato de e-mail válido.');
+      return;
+    }
 
     carregando.value = true;
     try {
-      final email = emailController.text.trim();
       final resposta = await _autenticacaoServico.solicitarRecuperacaoSenha(email);
 
       if (resposta.isOk) {
@@ -257,7 +267,9 @@ class AutenticacaoControlador extends GetxController {
           colorText: Colors.white,
           duration: const Duration(seconds: 5),
         );
-        Get.toNamed(RotasApp.VALIDAR_CODIGO);
+        if (Get.currentRoute == RotasApp.ESQUECI_SENHA) {
+          Get.toNamed(RotasApp.VALIDAR_CODIGO);
+        }
       } else {
         final erro = _api.tratarErro(resposta);
         _exibirMensagemErro('Erro', erro);
@@ -309,11 +321,28 @@ class AutenticacaoControlador extends GetxController {
       return;
     }
 
+    final emailFinal = emailRecuperacao.value.isNotEmpty
+        ? emailRecuperacao.value
+        : emailController.text.trim();
+    final codigoFinal = codigoRecuperacao.value.isNotEmpty
+        ? codigoRecuperacao.value
+        : codigoController.text.trim();
+
+    if (emailFinal.isEmpty) {
+      _exibirMensagemErro('Validação', 'Por favor, informe o e-mail cadastrado.');
+      return;
+    }
+
+    if (codigoFinal.isEmpty) {
+      _exibirMensagemErro('Validação', 'Por favor, informe o código de validação de 6 dígitos.');
+      return;
+    }
+
     carregando.value = true;
     try {
       final resposta = await _autenticacaoServico.redefinirSenha(
-        email: emailRecuperacao.value,
-        codigo: codigoRecuperacao.value,
+        email: emailFinal,
+        codigo: codigoFinal,
         novaSenha: senhaController.text,
       );
 

@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/autenticacao_controlador.dart';
+import '../../routes/rotas_app.dart';
 import '../widgets/botao_personalizado.dart';
 import '../widgets/texto_personalizado.dart';
 
-/// Visão de Redefinição de Senha - Etapa 3 (RF03): Definição de nova senha com confirmação idêntica.
+/// Visão de Redefinição de Senha (RF03): Definição de nova senha com validação de código e e-mail.
 class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
   const RedefinirSenhaView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    // Pré-preenche e-mail e código se vieram de etapas anteriores
+    if (controller.emailRecuperacao.value.isNotEmpty &&
+        controller.emailController.text.isEmpty) {
+      controller.emailController.text = controller.emailRecuperacao.value;
+    }
+    if (controller.codigoRecuperacao.value.isNotEmpty &&
+        controller.codigoController.text.isEmpty) {
+      controller.codigoController.text = controller.codigoRecuperacao.value;
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Redefinir Senha'),
+        title: const Text('Redefinição de Senha'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.blueGrey.shade900,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Get.offAllNamed(RotasApp.LOGIN),
+        ),
       ),
       body: SafeArea(
         child: Center(
@@ -41,12 +58,12 @@ class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
                       child: Icon(
                         Icons.lock_reset_rounded,
                         color: Colors.green.shade700,
-                        size: 36,
+                        size: 38,
                       ),
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Criar Nova Senha',
+                      'Redefinir Senha',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 22,
@@ -56,7 +73,7 @@ class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Código validado com sucesso! Agora cadastre sua nova senha de acesso.',
+                      'Informe seu e-mail cadastrado, o código de 6 dígitos e sua nova senha de acesso.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -64,9 +81,9 @@ class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
-                    // Card da nova senha
+                    // Card do Formulário
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -83,11 +100,71 @@ class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // E-mail Cadastrado com ação de Enviar Código
+                          CampoTextoPersonalizado(
+                            controlador: controller.emailController,
+                            rotulo: 'E-mail Cadastrado *',
+                            dica: 'seu.email@escola.edu.br',
+                            iconePrefixo: Icons.email_outlined,
+                            tipoTeclado: TextInputType.emailAddress,
+                            validador: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o e-mail cadastrado';
+                              }
+                              if (!GetUtils.isEmail(v.trim())) {
+                                return 'Informe um e-mail com formato válido';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Botão de solicitar/enviar código
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                controller.solicitarRecuperacaoSenha(
+                                  controller.emailController.text.trim(),
+                                );
+                              },
+                              icon: const Icon(Icons.send_rounded, size: 14),
+                              label: const Text(
+                                'Enviar / Reenviar código',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Código de 6 dígitos
+                          CampoTextoPersonalizado(
+                            controlador: controller.codigoController,
+                            rotulo: 'Código de Validação (6 dígitos) *',
+                            dica: 'Ex: 123456',
+                            iconePrefixo: Icons.pin_outlined,
+                            tipoTeclado: TextInputType.number,
+                            validador: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Informe o código de 6 dígitos recebido';
+                              }
+                              if (v.trim().length != 6) {
+                                return 'O código deve conter exatamente 6 dígitos';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
                           // Nova Senha
                           Obx(
                             () => CampoTextoPersonalizado(
                               controlador: controller.senhaController,
-                              rotulo: 'Nova Senha',
+                              rotulo: 'Nova Senha *',
                               dica: 'Digite a nova senha (mín. 6 caracteres)',
                               iconePrefixo: Icons.lock_outline_rounded,
                               ocultarTexto: !controller.senhaVisivel.value,
@@ -117,7 +194,7 @@ class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
                           Obx(
                             () => CampoTextoPersonalizado(
                               controlador: controller.confirmarSenhaController,
-                              rotulo: 'Confirmar Nova Senha',
+                              rotulo: 'Confirmar Nova Senha *',
                               dica: 'Digite a mesma senha novamente',
                               iconePrefixo: Icons.lock_clock_outlined,
                               ocultarTexto: !controller.confirmarSenhaVisivel.value,
@@ -146,13 +223,26 @@ class RedefinirSenhaView extends GetView<AutenticacaoControlador> {
                           // Botão Salvar
                           Obx(
                             () => BotaoPersonalizado(
-                              texto: 'Salvar e Acessar Conta',
+                              texto: 'Redefinir Senha e Acessar Conta',
                               icone: Icons.check_circle_rounded,
                               carregando: controller.carregando.value,
                               aoPressionar: controller.redefinirSenha,
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Voltar ao Login
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () => Get.offAllNamed(RotasApp.LOGIN),
+                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                        label: const Text('Lembrei minha senha, voltar ao login'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: tema.colorScheme.primary,
+                        ),
                       ),
                     ),
                   ],

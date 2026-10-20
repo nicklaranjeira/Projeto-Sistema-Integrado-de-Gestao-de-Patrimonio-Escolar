@@ -62,8 +62,8 @@
 
             </form>
 
-            <a href="#" class="link">
-                Esqueci minha senha
+            <a href="#" class="link" id="link-redefinir-senha">
+                Redefinir senha
             </a>
 
             <a href="#" class="link" id="link-criar-conta-coordenador">
@@ -878,7 +878,112 @@
         </div>
 
     </main>
+ 
+     <!-- ==============================
+          REDEFINIR SENHA
+     =============================== -->
 
-</body>
+     <main class="tela tela-cadastro" id="tela-redefinir-senha">
 
-</html>
+         <div class="conteudo conteudo-cadastro">
+
+             <header class="cabecalho-cadastro">
+                 <button type="button" class="botao-icone" id="btn-voltar-login-redefinir" title="Voltar ao login">
+                     ←
+                 </button>
+
+                 <div class="logo-cadastro">
+                     ▣
+                 </div>
+
+                 <div style="width: 40px;"></div>
+             </header>
+
+             <h1 class="titulo-cadastro">Redefinir Senha</h1>
+
+             <p class="subtitulo">
+                 Recupere o acesso à sua conta institucional
+             </p>
+
+             <form id="form-redefinir-senha">
+
+                 <!-- EMAIL -->
+                 <div class="campo">
+                     <label for="redef-email">E-mail Cadastrado</label>
+                     <div style="display: flex; gap: 8px;">
+                         <input
+                             type="email"
+                             id="redef-email"
+                             placeholder="seu.email@escola.gov.br"
+                             required
+                             style="flex: 1;"
+                         >
+                         <button
+                             type="button"
+                             class="botao"
+                             id="btn-enviar-codigo-redef"
+                             style="width: auto; padding: 0 14px; font-size: 13px; white-space: nowrap; background: #2563EB; color: white;"
+                         >
+                             Enviar código
+                         </button>
+                     </div>
+                 </div>
+
+                 <!-- CODIGO -->
+                 <div class="campo">
+                     <label for="redef-codigo">Código de Confirmação (6 dígitos)</label>
+                     <input
+                         type="text"
+                         id="redef-codigo"
+                         placeholder="Ex: 123456"
+                         maxlength="6"
+                         required
+                     >
+                 </div>
+
+                 <!-- NOVA SENHA -->
+                 <div class="campo">
+                     <label for="redef-password">Nova Senha</label>
+                     <div class="campo-senha-wrapper">
+                         <input
+                             type="password"
+                             id="redef-password"
+                             placeholder="Mínimo de 6 caracteres"
+                             required
+                         >
+                         <button type="button" class="btn-toggle-senha" id="btn-toggle-senha-redef" title="Visualizar senha">👁</button>
+                     </div>
+                 </div>
+
+                 <!-- CONFIRMAR SENHA -->
+                 <div class="campo">
+                     <label for="redef-confirmar-password">Confirmar Nova Senha</label>
+                     <input
+                         type="password"
+                         id="redef-confirmar-password"
+                         placeholder="Digite a mesma senha novamente"
+                         required
+                     >
+                 </div>
+
+                 <button
+                     type="button"
+                     class="botao botao-principal"
+                     id="btn-confirmar-redefinir-senha"
+                 >
+                     Salvar e redefinir senha
+                 </button>
+
+             </form>
+
+             <a href="#" class="link" id="link-voltar-login-redef">
+                 Lembrei minha senha, voltar ao login
+             </a>
+
+         </div>
+
+     </main>
+
+ </body>
+
+ </html>

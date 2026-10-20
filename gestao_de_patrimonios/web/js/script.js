@@ -1907,13 +1907,13 @@ const linksLogin = document.querySelectorAll(".login-container .link");
 
 if (linksLogin.length >= 2) {
 
-    /* Esqueci minha senha */
+    /* Esqueci minha senha / Redefinir senha */
 
     linksLogin[0].addEventListener("click", function (event) {
 
         event.preventDefault();
 
-        mostrarTela(11);
+        mostrarTela(7); // Abre a Tela 7 - Redefinir Senha
 
     });
 
@@ -1929,6 +1929,130 @@ if (linksLogin.length >= 2) {
         });
     }
 
+}
+
+
+/* =========================================
+   REDEFINIR SENHA (TELA 7)
+========================================= */
+
+const btnVoltarLoginRedef = document.getElementById("btn-voltar-login-redefinir");
+const linkVoltarLoginRedef = document.getElementById("link-voltar-login-redef");
+const btnToggleSenhaRedef = document.getElementById("btn-toggle-senha-redef");
+const btnEnviarCodigoRedef = document.getElementById("btn-enviar-codigo-redef");
+const btnConfirmarRedefinirSenha = document.getElementById("btn-confirmar-redefinir-senha");
+
+if (btnVoltarLoginRedef) {
+    btnVoltarLoginRedef.addEventListener("click", function () {
+        mostrarTela(0);
+    });
+}
+
+if (linkVoltarLoginRedef) {
+    linkVoltarLoginRedef.addEventListener("click", function (event) {
+        event.preventDefault();
+        mostrarTela(0);
+    });
+}
+
+if (btnToggleSenhaRedef) {
+    btnToggleSenhaRedef.addEventListener("click", function () {
+        const inputSenha = document.getElementById("redef-password");
+        if (inputSenha) {
+            inputSenha.type = inputSenha.type === "password" ? "text" : "password";
+        }
+    });
+}
+
+if (btnEnviarCodigoRedef) {
+    btnEnviarCodigoRedef.addEventListener("click", async function () {
+        const email = document.getElementById("redef-email")?.value.trim();
+        if (!email) {
+            alert("Por favor, digite seu e-mail cadastrado primeiro.");
+            return;
+        }
+
+        btnEnviarCodigoRedef.disabled = true;
+        btnEnviarCodigoRedef.textContent = "Enviando...";
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                alert(data.message || "Código de confirmação de 6 dígitos gerado com sucesso! Verifique o console do servidor api.exe.");
+            } else {
+                alert(data.error || "Não foi possível gerar o código. Verifique se o e-mail está cadastrado.");
+            }
+        } catch (e) {
+            alert("Erro de conexão com o servidor da API em " + API_BASE_URL);
+        } finally {
+            btnEnviarCodigoRedef.disabled = false;
+            btnEnviarCodigoRedef.textContent = "Enviar código";
+        }
+    });
+}
+
+if (btnConfirmarRedefinirSenha) {
+    btnConfirmarRedefinirSenha.addEventListener("click", async function () {
+        const email = document.getElementById("redef-email")?.value.trim();
+        const code = document.getElementById("redef-codigo")?.value.trim();
+        const password = document.getElementById("redef-password")?.value;
+        const confirmPassword = document.getElementById("redef-confirmar-password")?.value;
+
+        if (!email) {
+            alert("Por favor, informe seu e-mail cadastrado.");
+            return;
+        }
+        if (!code || code.length !== 6) {
+            alert("Por favor, informe o código de confirmação de 6 dígitos.");
+            return;
+        }
+        if (!password || password.length < 6) {
+            alert("A nova senha deve ter no mínimo 6 caracteres.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            alert("As senhas digitadas não coincidem.");
+            return;
+        }
+
+        btnConfirmarRedefinirSenha.disabled = true;
+        btnConfirmarRedefinirSenha.textContent = "Salvando...";
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: email,
+                    code: code,
+                    new_password: password,
+                    password: password
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                alert("Senha redefinida com sucesso! Você já pode entrar com a nova senha.");
+                document.getElementById("form-redefinir-senha")?.reset();
+                mostrarTela(0);
+            } else {
+                alert(data.error || "Código inválido ou inexistente. Verifique o código informado.");
+            }
+        } catch (e) {
+            alert("Erro de conexão com o servidor da API.");
+        } finally {
+            btnConfirmarRedefinirSenha.disabled = false;
+            btnConfirmarRedefinirSenha.textContent = "Salvar e redefinir senha";
+        }
+    });
 }
 
 
