@@ -193,7 +193,21 @@ async function apiListarProfessores() {
         });
         if (res.ok) {
             const data = await res.json();
-            return data.professores || data.data || [];
+            const profs = data.professores || data.data || [];
+            if (Array.isArray(profs)) {
+                const vistos = new Set();
+                return profs.filter(p => {
+                    if (!p) return false;
+                    const chave = (p.id !== undefined && p.id !== null ? `id_${p.id}` : null) ||
+                                  (p.email ? `email_${p.email.toLowerCase().trim()}` : null) ||
+                                  (p.matricula ? `mat_${p.matricula.trim()}` : null) ||
+                                  (p.nome ? `nome_${p.nome.toLowerCase().trim()}` : null);
+                    if (!chave || vistos.has(chave)) return false;
+                    vistos.add(chave);
+                    return true;
+                });
+            }
+            return profs;
         }
     } catch (_) {}
     return null;
